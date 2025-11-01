@@ -1,7 +1,9 @@
 node_modules/
-dist/
+src/
 *.log
 .DS_Store
 *.tsbuildinfo
-
+tsconfig.json
+tsup.config.ts
+.gitignore
 package-lock.json
