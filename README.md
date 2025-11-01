@@ -1,8 +1,8 @@
 # scrolloop
 
-React virtual scroll(윈도잉) 라이브러리입니다.
+React virtual-scroll(윈도잉) 라이브러리
 
-Just a virtual scrolling library for React
+Just a virtual-scrolling library for React
 
 ## install
 
