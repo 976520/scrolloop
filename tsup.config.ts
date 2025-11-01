@@ -9,7 +9,10 @@ export default defineConfig({
   clean: true,
   minify: true,
   external: ["react", "react-dom"],
-  jsxFactory: "React.createElement",
-  jsxFragment: "React.Fragment",
+  outExtension({ format }) {
+    return {
+      js: format === "esm" ? ".mjs" : ".cjs",
+    };
+  },
 });
 
