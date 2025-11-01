@@ -1,6 +1,10 @@
 {
   "name": "scrolloop",
   "version": "0.1.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/976520/scrolloop.git"
+  },
   "description": "Just a virtual scrolling library for React",
   "type": "module",
   "main": "./dist/index.cjs",
