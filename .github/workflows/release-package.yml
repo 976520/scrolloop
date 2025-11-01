@@ -23,7 +23,6 @@ jobs:
     permissions:
       packages: write
       contents: read
-
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +32,16 @@ jobs:
           registry-url: https://npm.pkg.github.com/
 
       - run: npm ci
-      - run: npm publish
+      - run: npm run build
+
+      - name: scope package name
+        run: |
+          jq '.name="@976520/scrolloop" | .publishConfig={"registry":"https://npm.pkg.github.com"}' package.json > package.tmp.json
+          mv package.tmp.json package.json
+          cat package.json
+
+      - name: npm publish
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -42,7 +50,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
     steps:
       - uses: actions/checkout@v4
 
@@ -52,6 +59,7 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - run: npm ci
+      - run: npm run build
 
       - name: Publish to npmjs
         run: npm publish --access public
