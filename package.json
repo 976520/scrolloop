@@ -1,6 +1,6 @@
 {
   "name": "scrolloop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Just a virtual scrolling library for React",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -45,4 +45,3 @@
     "tsup": "^8.0.0"
   }
 }
-
