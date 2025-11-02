@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, memo } from "react";
-import type { VirtualListProps } from "./types";
-import { clamp } from "./clamp";
+import type { VirtualListProps } from "../types";
+import { clamp } from "../utils/clamp";
 
 export const VirtualList = memo<VirtualListProps>(
   ({
