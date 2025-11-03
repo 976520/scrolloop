@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useMemo } from "react";
 import type { PageResponse } from "../types";
+import { canLoadPage } from "../utils/canLoadPage";
 
 interface UseInfinitePagesOptions<T> {
   fetchPage: (page: number, size: number) => Promise<PageResponse<T>>;
@@ -36,11 +37,7 @@ export function useInfinitePages<T>({
 
   const loadPage = useCallback(
     async (page: number) => {
-      if (pages.has(page) || loadingPages.has(page)) return;
-
-      if (total > 0 && page * pageSize >= total) return;
-
-      if (!hasMore && page > Math.floor(total / pageSize)) return;
+      if (!canLoadPage(page, pages, loadingPages, total, pageSize, hasMore)) return;
 
       setLoadingPages((prev) => new Set(prev).add(page));
       setError(null);
@@ -53,7 +50,6 @@ export function useInfinitePages<T>({
 
         if (controller.signal.aborted) return;
         
-
         setPages((prev) => new Map(prev).set(page, response.items));
         setTotal(response.total);
         setHasMore(response.hasMore);
