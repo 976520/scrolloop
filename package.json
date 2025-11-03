@@ -24,7 +24,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
+    "build:dev": "tsup --config tsup.dev.ts",
+    "dev": "tsup --config tsup.dev.ts --watch",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
