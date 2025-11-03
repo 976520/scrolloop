@@ -16,3 +16,31 @@ export interface VirtualListProps {
   onRangeChange?: (range: Range) => void;
 }
 
+export interface PageResponse<T> {
+  items: T[];
+  total: number;
+  hasMore: boolean;
+}
+
+export interface InfiniteListProps<T> {
+  fetchPage: (page: number, size: number) => Promise<PageResponse<T>>;
+  renderItem: (item: T, index: number, style: CSSProperties) => ReactNode;
+  itemSize: number;
+
+  pageSize?: number;
+  initialPage?: number;
+  prefetchThreshold?: number;
+
+  height?: number;
+  overscan?: number;
+  className?: string;
+  style?: CSSProperties;
+
+  renderLoading?: () => ReactNode;
+  renderError?: (error: Error, retry: () => void) => ReactNode;
+  renderEmpty?: () => ReactNode;
+
+  onPageLoad?: (page: number, items: T[]) => void;
+  onError?: (error: Error) => void;
+}
+
