@@ -1,10 +1,20 @@
+
+<img width="300" alt="4f11d7e413d6546a60fddc0e02219658e360d58512bc11c1acc57530fab307de" src="https://github.com/user-attachments/assets/d35a27e7-7895-43e5-9b4f-ac29c403dd3e" />
+
 # scrolloop
 
 React 스크롤 컴포넌트 라이브러리
 
 Just a scrolling library for React
 
-## install
+![NPM Downloads](https://img.shields.io/npm/d18m/scrolloop)
+![Repo size](https://img.shields.io/github/repo-size/976520/scrolloop)
+![Last commit](https://img.shields.io/github/last-commit/976520/scrolloop?color=red)
+![Top language](https://img.shields.io/github/languages/top/976520/scrolloop)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+
+## Install
 
 ```bash
 npm install scrolloop
@@ -12,7 +22,7 @@ yarn add scrolloop
 pnpm add scrolloop
 ```
 
-## Components
+## Example
 
 ### VirtualList
 
