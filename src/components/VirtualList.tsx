@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, memo, useCallback, cloneElement, isValidElement } from "react";
+import { useEffect, useRef, useState, memo, useCallback, cloneElement, isValidElement, type CSSProperties } from "react";
 import { flushSync } from "react-dom";
 import type { VirtualListProps } from "../types";
 import { clamp } from "../utils/clamp";
@@ -77,7 +77,7 @@ export const VirtualList = memo<VirtualListProps>(
 
     const items = [];
     for (let i = renderStartIndex; i <= renderEndIndex; i++) {
-      const itemStyle: React.CSSProperties = {
+      const itemStyle: CSSProperties = {
         position: "absolute",
         top: i * itemSize,
         left: 0,
