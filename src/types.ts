@@ -1,4 +1,9 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode, HTMLAttributes } from "react";
+
+export interface ItemProps extends HTMLAttributes<HTMLElement> {
+  key: number | string;
+  role?: string;
+}
 
 export interface Range {
   startIndex: number;
