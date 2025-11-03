@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import type { PageResponse } from "../types";
 
 interface UseInfinitePagesOptions<T> {
@@ -23,13 +23,22 @@ export function useInfinitePages<T>({
   const [error, setError] = useState<Error | null>(null);
   const abortControllersRef = useRef<Map<number, AbortController>>(new Map());
 
-  const allItems = Array.from(pages.entries())
-    .sort(([a], [b]) => a - b)
-    .flatMap(([, items]) => items);
+  const allItems = useMemo(() => {
+    const items: (T | undefined)[] = new Array(total);
+    pages.forEach((pageItems, pageNum) => {
+      const startIndex = pageNum * pageSize;
+      pageItems.forEach((item, i) => {
+        items[startIndex + i] = item;
+      });
+    });
+    return items;
+  }, [pages, total, pageSize]);
 
   const loadPage = useCallback(
     async (page: number) => {
       if (pages.has(page) || loadingPages.has(page)) return;
+
+      if (total > 0 && page * pageSize >= total) return;
 
       if (!hasMore && page > Math.floor(total / pageSize)) return;
 
