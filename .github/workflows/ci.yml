@@ -21,6 +21,8 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -56,6 +58,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node (npm registry)
         uses: actions/setup-node@v4
@@ -77,14 +81,6 @@ jobs:
           echo "name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
 
-          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -c '^package.json$' || true)
-          if [ "$CHANGED" -eq 0 ]; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "publish=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "changed=true" >> $GITHUB_OUTPUT
-
           PUBLISHED=$(npm view "${PKG_NAME}@${PKG_VERSION}" version || true)
           if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
             echo "publish=false" >> $GITHUB_OUTPUT
@@ -96,7 +92,6 @@ jobs:
         run: |
           echo "name: ${{ steps.decide.outputs.name }}"
           echo "version: ${{ steps.decide.outputs.version }}"
-          echo "changed: ${{ steps.decide.outputs.changed }}"
           echo "publish: ${{ steps.decide.outputs.publish }}"
 
       - name: Publish to npm
