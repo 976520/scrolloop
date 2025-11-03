@@ -2,6 +2,7 @@ import { useEffect, memo } from "react";
 import type { InfiniteListProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { useInfinitePages } from "../hooks/useInfinitePages";
+import { findMissingPages } from "../utils/findMissingPages";
 
 function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   const {
@@ -52,12 +53,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     const prefetchStart = Math.max(0, Math.floor(range.startIndex / pageSize) - Math.floor(range.endIndex / pageSize));
     const prefetchEnd = Math.floor(range.endIndex / pageSize) + prefetchThreshold + Math.ceil(overscan / pageSize);
 
-    const missingPages = [];
-    for (let p = prefetchStart; p <= prefetchEnd; p++) {
-      if (!pages.has(p) && !loadingPages.has(p)) {
-        missingPages.push(p);
-      }
-    }
+    findMissingPages(prefetchStart, prefetchEnd, pages, loadingPages);
 
     for (let page = prefetchStart; page <= prefetchEnd; page++) {
       loadPage(page);
