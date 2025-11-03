@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, memo } from "react";
+import { useEffect, useRef, useState, memo, useCallback, cloneElement, isValidElement } from "react";
+import { flushSync } from "react-dom";
 import type { VirtualListProps } from "../types";
 import { clamp } from "../utils/clamp";
 
@@ -14,23 +15,25 @@ export const VirtualList = memo<VirtualListProps>(
     onRangeChange,
   }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [scrollTop, setScrollTop] = useState(0);
-    const rafRef = useRef<number | null>(null);
+    const scrollTopRef = useRef(0);
+    const prevScrollTopRef = useRef(0);
+    const [, forceUpdate] = useState(0);
     const prevRangeRef = useRef<{ start: number; end: number }>({
       start: -1,
       end: -1,
     });
 
     const totalHeight = count * itemSize;
-
+    
+    const scrollTop = scrollTopRef.current;
+    const prevScrollTop = prevScrollTopRef.current;
+    
     const startIndex = clamp(0, Math.floor(scrollTop / itemSize), count - 1);
+    
+    const endIndex = Math.min(count - 1, startIndex + Math.ceil(height / itemSize));
 
-    const renderStartIndex = Math.max(0, startIndex - overscan);
-    const renderEndIndex = clamp(
-      0,
-      startIndex + Math.ceil(height / itemSize) + overscan * 2,
-      count - 1
-    );
+    const renderStartIndex = Math.max(0, Math.floor(startIndex - ((scrollTop < prevScrollTop) ? overscan * 1.5 : overscan)));
+    const renderEndIndex = Math.min(count - 1, Math.ceil(endIndex + ((scrollTop > prevScrollTop) ? overscan * 1.5 : overscan)));
 
     useEffect(() => {
       if (
@@ -49,26 +52,28 @@ export const VirtualList = memo<VirtualListProps>(
       }
     }, [renderStartIndex, renderEndIndex, onRangeChange]);
 
-    useEffect(() => {
+    const handleScroll = useCallback(() => {
       const container = containerRef.current;
       if (!container) return;
 
-      const handleScroll = () => {
-        if (rafRef.current !== null) return;
+      prevScrollTopRef.current = scrollTopRef.current;
+      scrollTopRef.current = container.scrollTop;
 
-        rafRef.current = requestAnimationFrame(() => {
-          if (container) setScrollTop(container.scrollTop);
-          rafRef.current = null;
-        });
-      };
+      flushSync(() => {
+        forceUpdate(prev => prev + 1);
+      });
+    }, []);
+
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
 
       container.addEventListener("scroll", handleScroll, { passive: true });
 
       return () => {
         container.removeEventListener("scroll", handleScroll);
-        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       };
-    }, []);
+    }, [handleScroll]);
 
     const items = [];
     for (let i = renderStartIndex; i <= renderEndIndex; i++) {
@@ -80,11 +85,16 @@ export const VirtualList = memo<VirtualListProps>(
         height: itemSize,
       };
 
-      items.push(
-        <div key={i} role="listitem" style={itemStyle}>
-          {renderItem(i, itemStyle)}
-        </div>
-      );
+      const itemContent = renderItem(i, itemStyle);
+      
+      if (isValidElement(itemContent)) {
+        items.push(
+          cloneElement(itemContent, {
+            key: i,
+            role: "listitem",
+          } as any)
+        );
+      } 
     }
 
     return (

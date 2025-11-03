@@ -12,7 +12,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     initialPage = 0,
     prefetchThreshold = 1,
     height = 400,
-    overscan = 4,
+    overscan: userOverscan,
     className,
     style,
     renderLoading,
@@ -21,6 +21,8 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     onPageLoad,
     onError,
   } = props;
+
+  const overscan = userOverscan ?? Math.max(20, pageSize * 2);
 
   const {
     allItems,
@@ -40,31 +42,37 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 
   useEffect(() => {
     if (pages.size === 0 && !error) {
-      loadPage(initialPage);
+      const overscanCount = overscan * 2;
+      const totalNeededItems = Math.ceil(height / itemSize) + overscanCount;
+      for (let page = 0; page < (Math.ceil(totalNeededItems / pageSize) + prefetchThreshold); page++) loadPage(page);
     }
-  }, [pages.size, loadPage, initialPage, error]);
+  }, [pages.size, loadPage, initialPage, error, height, itemSize, pageSize, prefetchThreshold, overscan]);
 
   const handleRangeChange = (range: { startIndex: number; endIndex: number }) => {
-    const currentPage = Math.floor(range.endIndex / pageSize);
-    const nextPage = currentPage + prefetchThreshold;
+    const prefetchStart = Math.max(0, Math.floor(range.startIndex / pageSize) - Math.floor(range.endIndex / pageSize));
+    const prefetchEnd = Math.floor(range.endIndex / pageSize) + prefetchThreshold + Math.ceil(overscan / pageSize);
 
-    loadPage(currentPage);
-    if (hasMore) {
-      loadPage(nextPage);
+    const missingPages = [];
+    for (let p = prefetchStart; p <= prefetchEnd; p++) {
+      if (!pages.has(p) && !loadingPages.has(p)) {
+        missingPages.push(p);
+      }
+    }
+
+    for (let page = prefetchStart; page <= prefetchEnd; page++) {
+      loadPage(page);
     }
   };
 
   if (error && allItems.length === 0) {
-    if (renderError) {
-      return <div style={{ height }}>{renderError(error, retry)}</div>;
-    }
+    if (renderError) return <div style={{ height }}>{renderError(error, retry)}</div>;
     return (
       <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
-          <p>데이터를 불러오는 중 오류가 발생했습니다.</p>
+          <p>Error.</p>
           <p style={{ color: "#666", fontSize: "0.9em" }}>{error.message}</p>
           <button onClick={retry} style={{ marginTop: 8, padding: "4px 12px", cursor: "pointer" }}>
-            재시도
+            Retry
           </button>
         </div>
       </div>
@@ -77,7 +85,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     }
     return (
       <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p>로딩 중...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -88,7 +96,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     }
     return (
       <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p>데이터가 없습니다.</p>
+        <p>No data.</p>
       </div>
     );
   }
