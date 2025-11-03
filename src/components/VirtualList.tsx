@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, memo, useCallback, cloneElement, isValidElement, type CSSProperties } from "react";
 import { flushSync } from "react-dom";
-import type { VirtualListProps } from "../types";
+import type { VirtualListProps, ItemProps } from "../types";
 import { clamp } from "../utils/clamp";
 import { calculateVisibleCount } from "../utils/calculateVisibleCount";
 
@@ -93,7 +93,7 @@ export const VirtualList = memo<VirtualListProps>(
           cloneElement(itemContent, {
             key: i,
             role: "listitem",
-          } as any)
+          } as ItemProps)
         );
       } 
     }
