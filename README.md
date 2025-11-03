@@ -1,8 +1,8 @@
 # scrolloop
 
-React virtual-scroll(윈도잉) 라이브러리
+React 스크롤 컴포넌트 라이브러리
 
-Just a virtual-scrolling library for React
+Just a scrolling library for React
 
 ## install
 
@@ -12,11 +12,11 @@ yarn add scrolloop
 pnpm add scrolloop
 ```
 
-## how to use
+## Components
+
+### VirtualList
 
 ```tsx
-import { VirtualList } from "scrolloop";
-
 const items = Array.from({ length: 10000 }, (_, i) => `Item ${i}`);
 
 export default function App() {
@@ -29,6 +29,41 @@ export default function App() {
           {items[index]}
         </div>
       )}
+    />
+  );
+}
+```
+
+### InfiniteList
+
+```tsx
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export default function UserList() {
+  return (
+    <InfiniteList<User>
+      fetchPage={fetchFunction()}
+      pageSize={20}
+      itemSize={60}
+      height={800}
+      renderItem={(user, index, style) => (
+        <div style={{ ...style, padding: '8px 16px', borderBottom: '1px solid #eee' }}>
+          <h3>{user.name}</h3>
+          <p>{user.email}</p>
+        </div>
+      )}
+      renderLoading={() => <div>로딩 중...</div>}
+      renderError={(error, retry) => (
+        <div>
+          <p>{error.message}</p>
+          <button onClick={retry}>재시도</button>
+        </div>
+      )}
+      renderEmpty={() => <div>데이터가 없습니다.</div>}
     />
   );
 }
