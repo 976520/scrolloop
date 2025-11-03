@@ -24,7 +24,7 @@ export interface PageResponse<T> {
 
 export interface InfiniteListProps<T> {
   fetchPage: (page: number, size: number) => Promise<PageResponse<T>>;
-  renderItem: (item: T, index: number, style: CSSProperties) => ReactNode;
+  renderItem: (item: T | undefined, index: number, style: CSSProperties) => ReactNode;
   itemSize: number;
 
   pageSize?: number;
