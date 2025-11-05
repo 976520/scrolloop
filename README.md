@@ -20,20 +20,11 @@ yarn add scrolloop
 pnpm add scrolloop
 ```
 
-```bash
-npm install @scrolloop/react
-
-npm install @scrolloop/react-native
-```
-
 ## Examples
 
 ### VirtualList
 
 ```tsx
-// import { VirtualList } from 'scrolloop';
-import { VirtualList } from "@scrolloop/react";
-
 const items = Array.from({ length: 10000 }, (_, i) => `Item ${i}`);
 
 export default function App() {
@@ -52,9 +43,6 @@ export default function App() {
 ```
 
 ```tsx
-// import { VirtualList } from 'scrolloop/native';
-import { VirtualList } from "@scrolloop/react-native";
-
 import { View, Text } from "react-native";
 
 const items = Array.from({ length: 10000 }, (_, i) => `Item ${i}`);
@@ -77,9 +65,6 @@ export default function App() {
 ### InfiniteList
 
 ```tsx
-// import { InfiniteList } from 'scrolloop';
-import { InfiniteList } from "@scrolloop/react";
-
 interface User {
   id: string;
   name: string;
@@ -119,9 +104,6 @@ export default function UserList() {
 ```
 
 ```tsx
-// import { InfiniteList } from 'scrolloop/native';
-import { InfiniteList } from "@scrolloop/react-native";
-
 import { View, Text, TouchableOpacity } from "react-native";
 
 interface User {

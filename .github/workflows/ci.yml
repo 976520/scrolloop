@@ -97,8 +97,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
 
-      - name: Decide publish (Root package)
-        id: decide_root
+      - name: Decide publish
+        id: decide_publish
         run: |
           set -e
           PKG_NAME=$(jq -r .name package.json)
@@ -114,75 +114,14 @@ jobs:
             echo "publish=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Decide publish (@scrolloop/react)
-        id: decide_react
+      - name: Show publish decision
         run: |
-          set -e
-          PKG_NAME=$(jq -r .name packages/react/package.json)
-          PKG_VERSION=$(jq -r .version packages/react/package.json)
+          echo "Package: ${{ steps.decide_publish.outputs.name }}"
+          echo "Version: ${{ steps.decide_publish.outputs.version }}"
+          echo "Will publish: ${{ steps.decide_publish.outputs.publish }}"
 
-          echo "name=$PKG_NAME" >> $GITHUB_OUTPUT
-          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
-
-          PUBLISHED=$(npm view "${PKG_NAME}@${PKG_VERSION}" version || true)
-          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
-            echo "publish=false" >> $GITHUB_OUTPUT
-          else
-            echo "publish=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Decide publish (@scrolloop/react-native)
-        id: decide_rn
-        run: |
-          set -e
-          PKG_NAME=$(jq -r .name packages/react-native/package.json)
-          PKG_VERSION=$(jq -r .version packages/react-native/package.json)
-
-          echo "name=$PKG_NAME" >> $GITHUB_OUTPUT
-          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
-
-          PUBLISHED=$(npm view "${PKG_NAME}@${PKG_VERSION}" version || true)
-          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
-            echo "publish=false" >> $GITHUB_OUTPUT
-          else
-            echo "publish=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Show publish decisions
-        run: |
-          echo "=== Root Package ==="
-          echo "name: ${{ steps.decide_root.outputs.name }}"
-          echo "version: ${{ steps.decide_root.outputs.version }}"
-          echo "publish: ${{ steps.decide_root.outputs.publish }}"
-          echo ""
-          echo "=== @scrolloop/react ==="
-          echo "name: ${{ steps.decide_react.outputs.name }}"
-          echo "version: ${{ steps.decide_react.outputs.version }}"
-          echo "publish: ${{ steps.decide_react.outputs.publish }}"
-          echo ""
-          echo "=== @scrolloop/react-native ==="
-          echo "name: ${{ steps.decide_rn.outputs.name }}"
-          echo "version: ${{ steps.decide_rn.outputs.version }}"
-          echo "publish: ${{ steps.decide_rn.outputs.publish }}"
-
-      - name: Publish @scrolloop/react to npm
-        if: steps.decide_react.outputs.publish == 'true'
-        working-directory: packages/react
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          pnpm publish --access public --no-git-checks
-
-      - name: Publish @scrolloop/react-native to npm
-        if: steps.decide_rn.outputs.publish == 'true'
-        working-directory: packages/react-native
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          pnpm publish --access public --no-git-checks
-
-      - name: Publish scrolloop (root) to npm
-        if: steps.decide_root.outputs.publish == 'true'
+      - name: Publish to npm
+        if: steps.decide_publish.outputs.publish == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
