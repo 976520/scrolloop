@@ -19,11 +19,17 @@
       "types": "./packages/react/dist/index.d.ts",
       "import": "./packages/react/dist/index.mjs",
       "require": "./packages/react/dist/index.cjs"
+    },
+    "./native": {
+      "types": "./packages/react-native/dist/index.d.ts",
+      "import": "./packages/react-native/dist/index.mjs",
+      "require": "./packages/react-native/dist/index.cjs"
     }
   },
   "sideEffects": false,
   "files": [
     "packages/react/dist",
+    "packages/react-native/dist",
     "README.md"
   ],
   "lint-staged": {
@@ -44,6 +50,7 @@
   },
   "keywords": [
     "react",
+    "react-native",
     "virtual",
     "scroll",
     "windowing",
@@ -53,8 +60,15 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.0.0",

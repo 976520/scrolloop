@@ -1,14 +1,18 @@
 import {
-  useEffect,
   useRef,
   useState,
   memo,
   useCallback,
   cloneElement,
   isValidElement,
-  type CSSProperties,
 } from "react";
-import { flushSync } from "react-dom";
+import {
+  ScrollView,
+  View,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
+  type ViewStyle,
+} from "react-native";
 import type { VirtualListProps, ItemProps } from "../types";
 import { calculateVirtualRange } from "@scrolloop/core";
 
@@ -19,11 +23,10 @@ export const VirtualList = memo<VirtualListProps>(
     renderItem,
     height = 400,
     overscan = 4,
-    className,
     style,
     onRangeChange,
+    ...scrollViewProps
   }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
     const scrollTopRef = useRef(0);
     const prevScrollTopRef = useRef(0);
     const [, forceUpdate] = useState(0);
@@ -47,49 +50,36 @@ export const VirtualList = memo<VirtualListProps>(
         prevScrollTop
       );
 
-    useEffect(() => {
-      if (
-        onRangeChange &&
-        (prevRangeRef.current.start !== renderStartIndex ||
-          prevRangeRef.current.end !== renderEndIndex)
-      ) {
-        prevRangeRef.current = {
-          start: renderStartIndex,
-          end: renderEndIndex,
-        };
-        onRangeChange({
-          startIndex: renderStartIndex,
-          endIndex: renderEndIndex,
-        });
-      }
-    }, [renderStartIndex, renderEndIndex, onRangeChange]);
+    const handleScroll = useCallback(
+      (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const newScrollTop = event.nativeEvent.contentOffset.y;
 
-    const handleScroll = useCallback(() => {
-      const container = containerRef.current;
-      if (!container) return;
+        prevScrollTopRef.current = scrollTopRef.current;
+        scrollTopRef.current = newScrollTop;
 
-      prevScrollTopRef.current = scrollTopRef.current;
-      scrollTopRef.current = container.scrollTop;
-
-      flushSync(() => {
         forceUpdate((prev) => prev + 1);
-      });
-    }, []);
+      },
+      []
+    );
 
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      container.addEventListener("scroll", handleScroll, { passive: true });
-
-      return () => {
-        container.removeEventListener("scroll", handleScroll);
+    if (
+      onRangeChange &&
+      (prevRangeRef.current.start !== renderStartIndex ||
+        prevRangeRef.current.end !== renderEndIndex)
+    ) {
+      prevRangeRef.current = {
+        start: renderStartIndex,
+        end: renderEndIndex,
       };
-    }, [handleScroll]);
+      onRangeChange({
+        startIndex: renderStartIndex,
+        endIndex: renderEndIndex,
+      });
+    }
 
     const items = [];
     for (let i = renderStartIndex; i <= renderEndIndex; i++) {
-      const itemStyle: CSSProperties = {
+      const itemStyle: ViewStyle = {
         position: "absolute",
         top: i * itemSize,
         left: 0,
@@ -103,24 +93,19 @@ export const VirtualList = memo<VirtualListProps>(
         items.push(
           cloneElement(itemContent, {
             key: i,
-            role: "listitem",
           } as ItemProps)
         );
       }
     }
 
     return (
-      <div
-        ref={containerRef}
-        role="list"
-        className={className}
-        style={{
-          overflow: "auto",
-          height,
-          ...style,
-        }}
+      <ScrollView
+        {...scrollViewProps}
+        style={[{ height }, style]}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        <div
+        <View
           style={{
             position: "relative",
             height: totalHeight,
@@ -128,8 +113,8 @@ export const VirtualList = memo<VirtualListProps>(
           }}
         >
           {items}
-        </div>
-      </div>
+        </View>
+      </ScrollView>
     );
   }
 );
