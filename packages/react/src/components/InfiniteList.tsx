@@ -1,7 +1,8 @@
-import { useEffect, memo } from "react";
+import { useEffect, memo, useMemo, useCallback } from "react";
 import type { InfiniteListProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { useInfinitePages, findMissingPages } from "@scrolloop/shared";
+import type { CSSProperties } from "react";
 
 function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   const {
@@ -22,7 +23,10 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     onError,
   } = props;
 
-  const overscan = userOverscan ?? Math.max(20, pageSize * 2);
+  const overscan = useMemo(
+    () => userOverscan ?? Math.max(20, pageSize * 2),
+    [userOverscan, pageSize]
+  );
 
   const { allItems, pages, loadingPages, hasMore, error, loadPage, retry } =
     useInfinitePages({
@@ -55,46 +59,100 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     overscan,
   ]);
 
-  const handleRangeChange = (range: {
-    startIndex: number;
-    endIndex: number;
-  }) => {
-    const prefetchStart = Math.max(
-      0,
-      Math.floor(range.startIndex / pageSize) -
-        Math.floor(range.endIndex / pageSize)
-    );
-    const prefetchEnd =
-      Math.floor(range.endIndex / pageSize) +
-      prefetchThreshold +
-      Math.ceil(overscan / pageSize);
+  const handleRangeChange = useCallback(
+    (range: { startIndex: number; endIndex: number }) => {
+      const prefetchStart = Math.max(
+        0,
+        Math.floor(range.startIndex / pageSize) -
+          Math.floor(range.endIndex / pageSize)
+      );
+      const prefetchEnd =
+        Math.floor(range.endIndex / pageSize) +
+        prefetchThreshold +
+        Math.ceil(overscan / pageSize);
 
-    findMissingPages(prefetchStart, prefetchEnd, pages, loadingPages);
+      findMissingPages(prefetchStart, prefetchEnd, pages, loadingPages);
 
-    for (let page = prefetchStart; page <= prefetchEnd; page++) {
-      loadPage(page);
-    }
-  };
+      for (let page = prefetchStart; page <= prefetchEnd; page++) {
+        loadPage(page);
+      }
+    },
+    [pageSize, prefetchThreshold, overscan, pages, loadingPages, loadPage]
+  );
+
+  const virtualListRenderItem = useCallback(
+    (index: number, itemStyle: CSSProperties) => {
+      const item = allItems[index];
+      return renderItem(item, index, itemStyle);
+    },
+    [allItems, renderItem]
+  );
+
+  const errorContainerStyle = useMemo<CSSProperties>(
+    () => ({
+      height,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }),
+    [height]
+  );
+
+  const errorContentStyle = useMemo<CSSProperties>(
+    () => ({
+      textAlign: "center",
+    }),
+    []
+  );
+
+  const errorMessageStyle = useMemo<CSSProperties>(
+    () => ({
+      color: "#666",
+      fontSize: "0.9em",
+    }),
+    []
+  );
+
+  const retryButtonStyle = useMemo<CSSProperties>(
+    () => ({
+      marginTop: 8,
+      padding: "4px 12px",
+      cursor: "pointer",
+    }),
+    []
+  );
+
+  const loadingContainerStyle = useMemo<CSSProperties>(
+    () => ({
+      height,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }),
+    [height]
+  );
+
+  const emptyContainerStyle = useMemo<CSSProperties>(
+    () => ({
+      height,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }),
+    [height]
+  );
+
+  const heightOnlyStyle = useMemo<CSSProperties>(() => ({ height }), [height]);
 
   if (error && allItems.length === 0) {
     if (renderError)
-      return <div style={{ height }}>{renderError(error, retry)}</div>;
+      return <div style={heightOnlyStyle}>{renderError(error, retry)}</div>;
     return (
-      <div
-        style={{
-          height,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div style={{ textAlign: "center" }}>
+      <div style={errorContainerStyle}>
+        <div style={errorContentStyle}>
           <p>Error.</p>
-          <p style={{ color: "#666", fontSize: "0.9em" }}>{error.message}</p>
-          <button
-            onClick={retry}
-            style={{ marginTop: 8, padding: "4px 12px", cursor: "pointer" }}
-          >
+          <p style={errorMessageStyle}>{error.message}</p>
+          <button onClick={retry} style={retryButtonStyle}>
             Retry
           </button>
         </div>
@@ -104,17 +162,10 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 
   if (allItems.length === 0 && loadingPages.size > 0) {
     if (renderLoading) {
-      return <div style={{ height }}>{renderLoading()}</div>;
+      return <div style={heightOnlyStyle}>{renderLoading()}</div>;
     }
     return (
-      <div
-        style={{
-          height,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div style={loadingContainerStyle}>
         <p>Loading...</p>
       </div>
     );
@@ -122,17 +173,10 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 
   if (allItems.length === 0 && !hasMore) {
     if (renderEmpty) {
-      return <div style={{ height }}>{renderEmpty()}</div>;
+      return <div style={heightOnlyStyle}>{renderEmpty()}</div>;
     }
     return (
-      <div
-        style={{
-          height,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div style={emptyContainerStyle}>
         <p>No data.</p>
       </div>
     );
@@ -147,10 +191,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
       className={className}
       style={style}
       onRangeChange={handleRangeChange}
-      renderItem={(index, itemStyle) => {
-        const item = allItems[index];
-        return renderItem(item, index, itemStyle);
-      }}
+      renderItem={virtualListRenderItem}
     />
   );
 }
