@@ -19,8 +19,6 @@ describe('InfiniteList', () => {
     mockFetchPage.mockClear();
   });
 
-  // 초기 로딩 상태가 올바르게 표시되는지
-  // (fetchPage가 resolve되지 않아 무한 로딩 상태 유지)
   it('shows loading state initially', () => {
     mockFetchPage.mockImplementation(
       () =>
@@ -34,7 +32,6 @@ describe('InfiniteList', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  // 페이지 fetch가 성공한 후 아이템이 올바르게 렌더링되는지
   it('renders items after successful fetch', async () => {
     mockFetchPage.mockImplementation((page) =>
       Promise.resolve({
@@ -55,7 +52,6 @@ describe('InfiniteList', () => {
     expect(screen.getByTestId('item-0')).toHaveTextContent('Item 0');
   });
 
-  // fetchPage가 실패했을 때 에러 상태가 올바르게 표시되는지
   it('shows error state when fetch fails', async () => {
     mockFetchPage.mockRejectedValue(new Error('Failed to fetch'));
 
@@ -69,7 +65,6 @@ describe('InfiniteList', () => {
     expect(screen.getByText('Retry')).toBeInTheDocument();
   });
 
-  // 데이터가 없을 때 (total=0, hasMore=false) 빈 상태가 표시되는지
   it('shows empty state when no data', async () => {
     mockFetchPage.mockResolvedValue({
       items: [],
@@ -84,7 +79,6 @@ describe('InfiniteList', () => {
     });
   });
 
-  // 페이지 로드 완료 시 onPageLoad 콜백이 올바르게 호출되는지
   it('calls onPageLoad callback', async () => {
     const onPageLoad = vi.fn();
     const mockData = Array(20)
@@ -104,7 +98,6 @@ describe('InfiniteList', () => {
     });
   });
 
-  // fetchPage 실패했을 때 onError 콜백이 올바르게 호출되는지
   it('calls onError callback on fetch failure', async () => {
     const onError = vi.fn();
     const error = new Error('Failed to fetch');
@@ -117,7 +110,6 @@ describe('InfiniteList', () => {
     });
   });
 
-  // 커스텀 로딩 컴포넌트가 올바르게 렌더링되는지
   it('renders custom loading component', () => {
     mockFetchPage.mockImplementation(
       () =>
@@ -133,7 +125,6 @@ describe('InfiniteList', () => {
     expect(screen.getByText('Custom Loading...')).toBeInTheDocument();
   });
 
-  // 커스텀 에러 컴포넌트가 올바르게 렌더링되고 retry 함수가 전달되는지
   it('renders custom error component', async () => {
     mockFetchPage.mockRejectedValue(new Error('Failed'));
 
@@ -153,7 +144,6 @@ describe('InfiniteList', () => {
     expect(screen.getByText('Try Again')).toBeInTheDocument();
   });
 
-  // 커스텀 빈 상태 컴포넌트가 올바르게 렌더링되는지
   it('renders custom empty component', async () => {
     mockFetchPage.mockResolvedValue({
       items: [],
@@ -170,7 +160,6 @@ describe('InfiniteList', () => {
     });
   });
 
-  // 커스텀 pageSize가 fetchPage 호출 시 올바르게 전달되는지
   it('uses custom pageSize', async () => {
     const mockData = Array(50)
       .fill(0)

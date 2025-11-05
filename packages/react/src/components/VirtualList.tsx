@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, memo, useCallback, cloneElement, isValidElement, type CSSProperties } from "react";
 import { flushSync } from "react-dom";
 import type { VirtualListProps, ItemProps } from "../types";
-import { clamp } from "../utils/clamp";
+import { clamp } from "@scrolloop/core";
 import { calculateVisibleCount } from "../utils/calculateVisibleCount";
 
 export const VirtualList = memo<VirtualListProps>(
