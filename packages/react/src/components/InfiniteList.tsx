@@ -3,7 +3,6 @@ import type { InfiniteListProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { useInfinitePages } from "../hooks/useInfinitePages";
 import { findMissingPages } from "../utils/findMissingPages";
-import { calculateVisibleCount } from "../utils/calculateVisibleCount";
 
 function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   const {
@@ -44,7 +43,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 
   useEffect(() => {
     if (pages.size === 0 && !error) {
-      const totalNeededItems = calculateVisibleCount(height, itemSize) + (overscan * 2);
+      const totalNeededItems = Math.ceil(height / itemSize) + (overscan * 2);
       for (let page = 0; page < (Math.ceil(totalNeededItems / pageSize) + prefetchThreshold); page++) loadPage(page);
     }
   }, [pages.size, loadPage, initialPage, error, height, itemSize, pageSize, prefetchThreshold, overscan]);
