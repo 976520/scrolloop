@@ -28,25 +28,40 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - run: npm ci
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Lint
         run: |
-          if npm run | grep -q "^ *lint *"; then npm run lint; else echo "no lint script"; fi
+          if pnpm run | grep -q "^ *lint *"; then pnpm run lint; else echo "no lint script"; fi
 
       - name: Typecheck
-        run: |
-          if npm run | grep -q "^ *typecheck *"; then npm run typecheck; else npx tsc -p tsconfig.json --noEmit; fi
+        run: pnpm run typecheck
 
       - name: Test
         run: |
-          if npm run | grep -q "^ *test *"; then npm test --if-present; else echo "no test script"; fi
+          if pnpm run | grep -q "^ *test *"; then pnpm test; else echo "no test script"; fi
 
       - name: Build
-        run: |
-          if npm run | grep -q "^ *build *"; then npm run build; else echo "no build script"; fi
+        run: pnpm run build
 
   publish:
     name: Publish to npm
@@ -65,13 +80,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
           registry-url: https://registry.npmjs.org/
 
-      - run: npm ci
-      - run: npm run build --if-present
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      - name: Decide publish
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+      - name: Decide publish (Root package)
         id: decide
         run: |
           set -e
@@ -94,9 +126,9 @@ jobs:
           echo "version: ${{ steps.decide.outputs.version }}"
           echo "publish: ${{ steps.decide.outputs.publish }}"
 
-      - name: Publish to npm
+      - name: Publish scrolloop to npm
         if: steps.decide.outputs.publish == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm publish --access public --provenance
+          pnpm publish --access public --no-git-checks

@@ -14,8 +14,13 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm ci
-      - run: npm run build
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
 
   publish-gpr:
     needs: build
@@ -31,8 +36,13 @@ jobs:
           node-version: 20
           registry-url: https://npm.pkg.github.com/
 
-      - run: npm ci
-      - run: npm run build
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
 
       - name: scope package name
         run: |
@@ -40,8 +50,8 @@ jobs:
           mv package.tmp.json package.json
           cat package.json
 
-      - name: npm publish
-        run: npm publish
+      - name: pnpm publish
+        run: pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -58,10 +68,15 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org/
 
-      - run: npm ci
-      - run: npm run build
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      - name: Publish to npmjs
-        run: npm publish --access public
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+      - name: Publish scrolloop to npmjs
+        run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
