@@ -3,6 +3,13 @@ export interface Range {
   endIndex: number;
 }
 
+export interface VirtualRange {
+  startIndex: number;
+  endIndex: number;
+  renderStart: number;
+  renderEnd: number;
+}
+
 export interface VirtualItem {
   index: number;
   start: number;
@@ -20,8 +27,8 @@ export interface VirtualizerState {
 }
 
 export interface ScrollToOptions {
-  align?: 'start' | 'center' | 'end' | 'auto';
-  behavior?: 'auto' | 'smooth';
+  align?: "start" | "center" | "end" | "auto";
+  behavior?: "auto" | "smooth";
 }
 
 export interface VirtualizerOptions {
@@ -29,4 +36,3 @@ export interface VirtualizerOptions {
   overscan?: number;
   onChange?: (state: VirtualizerState) => void;
 }
-
