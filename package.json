@@ -1,6 +1,5 @@
 {
   "name": "scrolloop",
-  "private": true,
   "version": "0.1.8",
   "repository": {
     "type": "git",
@@ -24,7 +23,7 @@
   },
   "sideEffects": false,
   "files": [
-    "dist",
+    "packages/react/dist",
     "README.md"
   ],
   "scripts": {
