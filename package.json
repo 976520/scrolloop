@@ -26,6 +26,11 @@
     "packages/react/dist",
     "README.md"
   ],
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -34,7 +39,8 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "build:legacy": "tsup",
-    "dev:legacy": "tsup --config tsup.dev.ts --watch"
+    "dev:legacy": "tsup --config tsup.dev.ts --watch",
+    "prepare": "husky"
   },
   "keywords": [
     "react",
@@ -59,7 +65,10 @@
     "@types/react-dom": "^18.2.0",
     "@vitest/coverage-v8": "^2.0.0",
     "bundlesize": "^0.18.2",
+    "husky": "^9.1.7",
     "jsdom": "^24.0.0",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "terser": "^5.44.0",
