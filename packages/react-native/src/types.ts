@@ -1,30 +1,29 @@
-import type { CSSProperties, ReactNode, HTMLAttributes } from "react";
+import type { ReactNode } from "react";
+import type { ViewStyle, ScrollViewProps } from "react-native";
 import type { PageResponse, Range } from "@scrolloop/shared";
 
 export type { PageResponse, Range };
 
-export interface ItemProps extends HTMLAttributes<HTMLElement> {
+export interface ItemProps {
   key: number | string;
-  role?: string;
 }
 
-export interface VirtualListProps {
+export interface VirtualListProps extends Omit<ScrollViewProps, "onScroll"> {
   count: number;
   itemSize: number;
-  renderItem: (index: number, style: CSSProperties) => ReactNode;
+  renderItem: (index: number, style: ViewStyle) => ReactNode;
   height?: number;
   overscan?: number;
-  className?: string;
-  style?: CSSProperties;
   onRangeChange?: (range: Range) => void;
 }
 
-export interface InfiniteListProps<T> {
+export interface InfiniteListProps<T>
+  extends Omit<ScrollViewProps, "onScroll"> {
   fetchPage: (page: number, size: number) => Promise<PageResponse<T>>;
   renderItem: (
     item: T | undefined,
     index: number,
-    style: CSSProperties
+    style: ViewStyle
   ) => ReactNode;
   itemSize: number;
 
@@ -34,8 +33,6 @@ export interface InfiniteListProps<T> {
 
   height?: number;
   overscan?: number;
-  className?: string;
-  style?: CSSProperties;
 
   renderLoading?: () => ReactNode;
   renderError?: (error: Error, retry: () => void) => ReactNode;

@@ -1,16 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { useInfinitePages } from './useInfinitePages';
-import type { PageResponse } from '../types';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { useInfinitePages } from "./useInfinitePages";
+import type { PageResponse } from "../types";
 
-describe('useInfinitePages', () => {
-  const mockFetchPage = vi.fn<(page: number, size: number) => Promise<PageResponse<{ id: number }>>>();
+describe("useInfinitePages", () => {
+  const mockFetchPage =
+    vi.fn<
+      (page: number, size: number) => Promise<PageResponse<{ id: number }>>
+    >();
 
   beforeEach(() => {
     mockFetchPage.mockClear();
   });
 
-  it('initializes with empty state', () => {
+  it("initializes with empty state", () => {
     const { result } = renderHook(() =>
       useInfinitePages({
         fetchPage: mockFetchPage,
@@ -27,7 +30,7 @@ describe('useInfinitePages', () => {
     expect(result.current.allItems).toEqual([]);
   });
 
-  it('loads page successfully', async () => {
+  it("loads page successfully", async () => {
     const mockData = Array(20)
       .fill(0)
       .map((_, i) => ({ id: i }));
@@ -46,7 +49,9 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.pages.size).toBe(1);
@@ -58,7 +63,7 @@ describe('useInfinitePages', () => {
     expect(result.current.hasMore).toBe(true);
   });
 
-  it('prevents duplicate page loads', async () => {
+  it("prevents duplicate page loads", async () => {
     mockFetchPage.mockResolvedValue({
       items: Array(20).fill({ id: 0 }),
       total: 100,
@@ -73,22 +78,27 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.pages.size).toBe(1);
     });
 
     mockFetchPage.mockClear();
-    result.current.loadPage(0);
+
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(mockFetchPage).not.toHaveBeenCalled();
     });
   });
 
-  it('handles fetch error', async () => {
-    const error = new Error('Failed to fetch');
+  it("handles fetch error", async () => {
+    const error = new Error("Failed to fetch");
     mockFetchPage.mockRejectedValue(error);
 
     const { result } = renderHook(() =>
@@ -99,17 +109,19 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.error).toBeTruthy();
     });
 
-    expect(result.current.error?.message).toBe('Failed to fetch');
+    expect(result.current.error?.message).toBe("Failed to fetch");
     expect(result.current.pages.size).toBe(0);
   });
 
-  it('calls onPageLoad callback', async () => {
+  it("calls onPageLoad callback", async () => {
     const onPageLoad = vi.fn();
     const mockData = Array(20)
       .fill(0)
@@ -130,16 +142,18 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(onPageLoad).toHaveBeenCalledWith(0, mockData);
     });
   });
 
-  it('calls onError callback', async () => {
+  it("calls onError callback", async () => {
     const onError = vi.fn();
-    const error = new Error('Failed');
+    const error = new Error("Failed");
     mockFetchPage.mockRejectedValue(error);
 
     const { result } = renderHook(() =>
@@ -151,14 +165,16 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(onError).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 
-  it('merges multiple pages into allItems', async () => {
+  it("merges multiple pages into allItems", async () => {
     mockFetchPage.mockImplementation((page) =>
       Promise.resolve({
         items: Array(20)
@@ -177,13 +193,17 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.pages.size).toBe(1);
     });
 
-    result.current.loadPage(1);
+    await act(async () => {
+      result.current.loadPage(1);
+    });
 
     await waitFor(() => {
       expect(result.current.pages.size).toBe(2);
@@ -194,8 +214,8 @@ describe('useInfinitePages', () => {
     expect(result.current.allItems[20]).toEqual({ id: 20 });
   });
 
-  it('retry reloads initial page', async () => {
-    const error = new Error('Failed');
+  it("retry reloads initial page", async () => {
+    const error = new Error("Failed");
     mockFetchPage.mockRejectedValueOnce(error).mockResolvedValueOnce({
       items: Array(20).fill({ id: 0 }),
       total: 100,
@@ -210,13 +230,17 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.error).toBeTruthy();
     });
 
-    result.current.retry();
+    await act(async () => {
+      result.current.retry();
+    });
 
     await waitFor(() => {
       expect(result.current.error).toBeNull();
@@ -224,7 +248,7 @@ describe('useInfinitePages', () => {
     });
   });
 
-  it('reset clears all state', async () => {
+  it("reset clears all state", async () => {
     mockFetchPage.mockResolvedValue({
       items: Array(20).fill({ id: 0 }),
       total: 100,
@@ -239,13 +263,17 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.pages.size).toBe(1);
     });
 
-    result.current.reset();
+    act(() => {
+      result.current.reset();
+    });
 
     await waitFor(() => {
       expect(result.current.pages.size).toBe(0);
@@ -257,7 +285,7 @@ describe('useInfinitePages', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('does not load page beyond total', async () => {
+  it("does not load page beyond total", async () => {
     mockFetchPage.mockResolvedValue({
       items: Array(20).fill({ id: 0 }),
       total: 50,
@@ -272,7 +300,9 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.pages.size).toBe(1);
@@ -280,14 +310,16 @@ describe('useInfinitePages', () => {
 
     mockFetchPage.mockClear();
 
-    result.current.loadPage(3);
+    await act(async () => {
+      result.current.loadPage(3);
+    });
 
     await waitFor(() => {
       expect(mockFetchPage).not.toHaveBeenCalled();
     });
   });
 
-  it('tracks loading pages', async () => {
+  it("tracks loading pages", async () => {
     mockFetchPage.mockImplementation(
       () =>
         new Promise(() => {
@@ -303,15 +335,17 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.loadingPages.has(0)).toBe(true);
     });
   });
 
-  it('handles non-Error exceptions', async () => {
-    mockFetchPage.mockRejectedValue('String error');
+  it("handles non-Error exceptions", async () => {
+    mockFetchPage.mockRejectedValue("String error");
 
     const { result } = renderHook(() =>
       useInfinitePages({
@@ -321,13 +355,14 @@ describe('useInfinitePages', () => {
       })
     );
 
-    result.current.loadPage(0);
+    await act(async () => {
+      result.current.loadPage(0);
+    });
 
     await waitFor(() => {
       expect(result.current.error).toBeTruthy();
     });
 
-    expect(result.current.error?.message).toBe('String error');
+    expect(result.current.error?.message).toBe("String error");
   });
 });
-

@@ -1,4 +1,5 @@
 import { useEffect, memo } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
 import type { InfiniteListProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { useInfinitePages, findMissingPages } from "@scrolloop/shared";
@@ -13,13 +14,13 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     prefetchThreshold = 1,
     height = 400,
     overscan: userOverscan,
-    className,
     style,
     renderLoading,
     renderError,
     renderEmpty,
     onPageLoad,
     onError,
+    ...scrollViewProps
   } = props;
 
   const overscan = userOverscan ?? Math.max(20, pageSize * 2);
@@ -77,74 +78,88 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   };
 
   if (error && allItems.length === 0) {
-    if (renderError)
-      return <div style={{ height }}>{renderError(error, retry)}</div>;
+    if (renderError) {
+      return (
+        <View style={[{ height }, style]}>{renderError(error, retry)}</View>
+      );
+    }
     return (
-      <div
-        style={{
-          height,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+      <View
+        style={[
+          {
+            height,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+          style,
+        ]}
       >
-        <div style={{ textAlign: "center" }}>
-          <p>Error.</p>
-          <p style={{ color: "#666", fontSize: "0.9em" }}>{error.message}</p>
-          <button
-            onClick={retry}
-            style={{ marginTop: 8, padding: "4px 12px", cursor: "pointer" }}
+        <View style={{ alignItems: "center" }}>
+          <Text>Error.</Text>
+          <Text style={{ color: "#666", fontSize: 14, marginTop: 4 }}>
+            {error.message}
+          </Text>
+          <TouchableOpacity
+            onPress={retry}
+            style={{ marginTop: 8, paddingVertical: 4, paddingHorizontal: 12 }}
           >
-            Retry
-          </button>
-        </div>
-      </div>
+            <Text>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   }
 
   if (allItems.length === 0 && loadingPages.size > 0) {
     if (renderLoading) {
-      return <div style={{ height }}>{renderLoading()}</div>;
+      return <View style={[{ height }, style]}>{renderLoading()}</View>;
     }
     return (
-      <div
-        style={{
-          height,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+      <View
+        style={[
+          {
+            height,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+          style,
+        ]}
       >
-        <p>Loading...</p>
-      </div>
+        <Text>Loading...</Text>
+      </View>
     );
   }
 
   if (allItems.length === 0 && !hasMore) {
     if (renderEmpty) {
-      return <div style={{ height }}>{renderEmpty()}</div>;
+      return <View style={[{ height }, style]}>{renderEmpty()}</View>;
     }
     return (
-      <div
-        style={{
-          height,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+      <View
+        style={[
+          {
+            height,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+          style,
+        ]}
       >
-        <p>No data.</p>
-      </div>
+        <Text>No data.</Text>
+      </View>
     );
   }
 
   return (
     <VirtualList
+      {...scrollViewProps}
       count={allItems.length}
       itemSize={itemSize}
       height={height}
       overscan={overscan}
-      className={className}
       style={style}
       onRangeChange={handleRangeChange}
       renderItem={(index, itemStyle) => {

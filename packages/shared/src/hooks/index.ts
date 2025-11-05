@@ -1,0 +1,1 @@
+export { useInfinitePages } from "./useInfinitePages";
