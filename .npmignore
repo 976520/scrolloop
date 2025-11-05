@@ -8,3 +8,4 @@ tsup.config.ts
 .gitignore
 package-lock.json
 .turbo
+.pnpm-store
