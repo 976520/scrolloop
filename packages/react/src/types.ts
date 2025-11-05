@@ -1,13 +1,11 @@
 import type { CSSProperties, ReactNode, HTMLAttributes } from "react";
+import type { PageResponse, Range } from "@scrolloop/shared";
+
+export type { PageResponse, Range };
 
 export interface ItemProps extends HTMLAttributes<HTMLElement> {
   key: number | string;
   role?: string;
-}
-
-export interface Range {
-  startIndex: number;
-  endIndex: number;
 }
 
 export interface VirtualListProps {
@@ -21,15 +19,13 @@ export interface VirtualListProps {
   onRangeChange?: (range: Range) => void;
 }
 
-export interface PageResponse<T> {
-  items: T[];
-  total: number;
-  hasMore: boolean;
-}
-
 export interface InfiniteListProps<T> {
   fetchPage: (page: number, size: number) => Promise<PageResponse<T>>;
-  renderItem: (item: T | undefined, index: number, style: CSSProperties) => ReactNode;
+  renderItem: (
+    item: T | undefined,
+    index: number,
+    style: CSSProperties
+  ) => ReactNode;
   itemSize: number;
 
   pageSize?: number;
@@ -48,4 +44,3 @@ export interface InfiniteListProps<T> {
   onPageLoad?: (page: number, items: T[]) => void;
   onError?: (error: Error) => void;
 }
-

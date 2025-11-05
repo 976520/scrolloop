@@ -1,8 +1,7 @@
 import { useEffect, memo } from "react";
 import type { InfiniteListProps } from "../types";
 import { VirtualList } from "./VirtualList";
-import { useInfinitePages } from "../hooks/useInfinitePages";
-import { findMissingPages } from "../utils/findMissingPages";
+import { useInfinitePages, findMissingPages } from "@scrolloop/shared";
 
 function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   const {
@@ -25,32 +24,50 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 
   const overscan = userOverscan ?? Math.max(20, pageSize * 2);
 
-  const {
-    allItems,
-    pages,
-    loadingPages,
-    hasMore,
-    error,
-    loadPage,
-    retry,
-  } = useInfinitePages({
-    fetchPage,
-    pageSize,
-    initialPage,
-    onPageLoad,
-    onError,
-  });
+  const { allItems, pages, loadingPages, hasMore, error, loadPage, retry } =
+    useInfinitePages({
+      fetchPage,
+      pageSize,
+      initialPage,
+      onPageLoad,
+      onError,
+    });
 
   useEffect(() => {
     if (pages.size === 0 && !error) {
-      const totalNeededItems = Math.ceil(height / itemSize) + (overscan * 2);
-      for (let page = 0; page < (Math.ceil(totalNeededItems / pageSize) + prefetchThreshold); page++) loadPage(page);
+      const totalNeededItems = Math.ceil(height / itemSize) + overscan * 2;
+      for (
+        let page = 0;
+        page < Math.ceil(totalNeededItems / pageSize) + prefetchThreshold;
+        page++
+      )
+        loadPage(page);
     }
-  }, [pages.size, loadPage, initialPage, error, height, itemSize, pageSize, prefetchThreshold, overscan]);
+  }, [
+    pages.size,
+    loadPage,
+    initialPage,
+    error,
+    height,
+    itemSize,
+    pageSize,
+    prefetchThreshold,
+    overscan,
+  ]);
 
-  const handleRangeChange = (range: { startIndex: number; endIndex: number }) => {
-    const prefetchStart = Math.max(0, Math.floor(range.startIndex / pageSize) - Math.floor(range.endIndex / pageSize));
-    const prefetchEnd = Math.floor(range.endIndex / pageSize) + prefetchThreshold + Math.ceil(overscan / pageSize);
+  const handleRangeChange = (range: {
+    startIndex: number;
+    endIndex: number;
+  }) => {
+    const prefetchStart = Math.max(
+      0,
+      Math.floor(range.startIndex / pageSize) -
+        Math.floor(range.endIndex / pageSize)
+    );
+    const prefetchEnd =
+      Math.floor(range.endIndex / pageSize) +
+      prefetchThreshold +
+      Math.ceil(overscan / pageSize);
 
     findMissingPages(prefetchStart, prefetchEnd, pages, loadingPages);
 
@@ -60,13 +77,24 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   };
 
   if (error && allItems.length === 0) {
-    if (renderError) return <div style={{ height }}>{renderError(error, retry)}</div>;
+    if (renderError)
+      return <div style={{ height }}>{renderError(error, retry)}</div>;
     return (
-      <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          height,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <div style={{ textAlign: "center" }}>
           <p>Error.</p>
           <p style={{ color: "#666", fontSize: "0.9em" }}>{error.message}</p>
-          <button onClick={retry} style={{ marginTop: 8, padding: "4px 12px", cursor: "pointer" }}>
+          <button
+            onClick={retry}
+            style={{ marginTop: 8, padding: "4px 12px", cursor: "pointer" }}
+          >
             Retry
           </button>
         </div>
@@ -79,7 +107,14 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
       return <div style={{ height }}>{renderLoading()}</div>;
     }
     return (
-      <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          height,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <p>Loading...</p>
       </div>
     );
@@ -90,7 +125,14 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
       return <div style={{ height }}>{renderEmpty()}</div>;
     }
     return (
-      <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          height,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <p>No data.</p>
       </div>
     );
@@ -116,4 +158,3 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 export const InfiniteList = memo(InfiniteListInner) as <T>(
   props: InfiniteListProps<T>
 ) => JSX.Element;
-

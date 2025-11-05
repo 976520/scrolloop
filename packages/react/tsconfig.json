@@ -2,9 +2,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "types": ["vitest/globals"]
   },
-  "include": ["src/**/*", "tsup.config.ts"],
+  "include": ["src/**/*", "tsup.config.ts", "vitest.setup.ts"],
   "exclude": ["node_modules", "dist"]
 }
-

@@ -1,7 +1,16 @@
-import { useEffect, useRef, useState, memo, useCallback, cloneElement, isValidElement, type CSSProperties } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  memo,
+  useCallback,
+  cloneElement,
+  isValidElement,
+  type CSSProperties,
+} from "react";
 import { flushSync } from "react-dom";
 import type { VirtualListProps, ItemProps } from "../types";
-import { clamp } from "@scrolloop/core";
+import { calculateVirtualRange } from "@scrolloop/core";
 
 export const VirtualList = memo<VirtualListProps>(
   ({
@@ -24,16 +33,19 @@ export const VirtualList = memo<VirtualListProps>(
     });
 
     const totalHeight = count * itemSize;
-    
+
     const scrollTop = scrollTopRef.current;
     const prevScrollTop = prevScrollTopRef.current;
-    
-    const startIndex = clamp(0, Math.floor(scrollTop / itemSize), count - 1);
-    
-    const endIndex = Math.min(count - 1, startIndex + Math.ceil(height / itemSize));
 
-    const renderStartIndex = Math.max(0, Math.floor(startIndex - ((scrollTop < prevScrollTop) ? overscan * 1.5 : overscan)));
-    const renderEndIndex = Math.min(count - 1, Math.ceil(endIndex + ((scrollTop > prevScrollTop) ? overscan * 1.5 : overscan)));
+    const { renderStart: renderStartIndex, renderEnd: renderEndIndex } =
+      calculateVirtualRange(
+        scrollTop,
+        height,
+        itemSize,
+        count,
+        overscan,
+        prevScrollTop
+      );
 
     useEffect(() => {
       if (
@@ -60,7 +72,7 @@ export const VirtualList = memo<VirtualListProps>(
       scrollTopRef.current = container.scrollTop;
 
       flushSync(() => {
-        forceUpdate(prev => prev + 1);
+        forceUpdate((prev) => prev + 1);
       });
     }, []);
 
@@ -86,7 +98,7 @@ export const VirtualList = memo<VirtualListProps>(
       };
 
       const itemContent = renderItem(i, itemStyle);
-      
+
       if (isValidElement(itemContent)) {
         items.push(
           cloneElement(itemContent, {
@@ -94,7 +106,7 @@ export const VirtualList = memo<VirtualListProps>(
             role: "listitem",
           } as ItemProps)
         );
-      } 
+      }
     }
 
     return (
@@ -123,4 +135,3 @@ export const VirtualList = memo<VirtualListProps>(
 );
 
 VirtualList.displayName = "VirtualList";
-

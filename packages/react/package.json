@@ -14,7 +14,9 @@
     }
   },
   "sideEffects": false,
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -27,7 +29,8 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "@scrolloop/core": "workspace:*"
+    "@scrolloop/core": "workspace:*",
+    "@scrolloop/shared": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.0.0",
@@ -45,4 +48,3 @@
   },
   "license": "MIT"
 }
-
