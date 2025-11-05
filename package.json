@@ -1,5 +1,6 @@
 {
   "name": "scrolloop",
+  "private": true,
   "version": "0.1.8",
   "repository": {
     "type": "git",
@@ -7,6 +8,10 @@
   },
   "description": "Just a virtual scrolling library for React",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "packageManager": "pnpm@10.20.0",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -23,14 +28,14 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup",
-    "build:dev": "tsup --config tsup.dev.ts",
-    "dev": "tsup --config tsup.dev.ts --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "build:legacy": "tsup",
+    "dev:legacy": "tsup --config tsup.dev.ts --watch"
   },
   "keywords": [
     "react",
@@ -58,6 +63,7 @@
     "react-dom": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^2.0.0"
+    "vitest": "^2.0.0",
+    "turbo": "^2.0.0"
   }
 }
