@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, memo, useCallback, cloneElement, isValidEl
 import { flushSync } from "react-dom";
 import type { VirtualListProps, ItemProps } from "../types";
 import { clamp } from "@scrolloop/core";
-import { calculateVisibleCount } from "../utils/calculateVisibleCount";
 
 export const VirtualList = memo<VirtualListProps>(
   ({
@@ -31,7 +30,7 @@ export const VirtualList = memo<VirtualListProps>(
     
     const startIndex = clamp(0, Math.floor(scrollTop / itemSize), count - 1);
     
-    const endIndex = Math.min(count - 1, startIndex + calculateVisibleCount(height, itemSize));
+    const endIndex = Math.min(count - 1, startIndex + Math.ceil(height / itemSize));
 
     const renderStartIndex = Math.max(0, Math.floor(startIndex - ((scrollTop < prevScrollTop) ? overscan * 1.5 : overscan)));
     const renderEndIndex = Math.min(count - 1, Math.ceil(endIndex + ((scrollTop > prevScrollTop) ? overscan * 1.5 : overscan)));
