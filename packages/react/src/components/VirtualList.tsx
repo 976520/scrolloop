@@ -4,6 +4,7 @@ import {
   useState,
   memo,
   useCallback,
+  useMemo,
   cloneElement,
   isValidElement,
   type CSSProperties,
@@ -26,13 +27,18 @@ export const VirtualList = memo<VirtualListProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollTopRef = useRef(0);
     const prevScrollTopRef = useRef(0);
+    const onRangeChangeRef = useRef(onRangeChange);
     const [, forceUpdate] = useState(0);
     const prevRangeRef = useRef<{ start: number; end: number }>({
       start: -1,
       end: -1,
     });
 
-    const totalHeight = count * itemSize;
+    useEffect(() => {
+      onRangeChangeRef.current = onRangeChange;
+    }, [onRangeChange]);
+
+    const totalHeight = useMemo(() => count * itemSize, [count, itemSize]);
 
     const scrollTop = scrollTopRef.current;
     const prevScrollTop = prevScrollTopRef.current;
@@ -49,7 +55,7 @@ export const VirtualList = memo<VirtualListProps>(
 
     useEffect(() => {
       if (
-        onRangeChange &&
+        onRangeChangeRef.current &&
         (prevRangeRef.current.start !== renderStartIndex ||
           prevRangeRef.current.end !== renderEndIndex)
       ) {
@@ -57,12 +63,12 @@ export const VirtualList = memo<VirtualListProps>(
           start: renderStartIndex,
           end: renderEndIndex,
         };
-        onRangeChange({
+        onRangeChangeRef.current({
           startIndex: renderStartIndex,
           endIndex: renderEndIndex,
         });
       }
-    }, [renderStartIndex, renderEndIndex, onRangeChange]);
+    }, [renderStartIndex, renderEndIndex]);
 
     const handleScroll = useCallback(() => {
       const container = containerRef.current;
@@ -87,48 +93,57 @@ export const VirtualList = memo<VirtualListProps>(
       };
     }, [handleScroll]);
 
-    const items = [];
-    for (let i = renderStartIndex; i <= renderEndIndex; i++) {
-      const itemStyle: CSSProperties = {
-        position: "absolute",
-        top: i * itemSize,
-        left: 0,
-        right: 0,
-        height: itemSize,
-      };
+    const items = useMemo(() => {
+      const result = [];
+      for (let i = renderStartIndex; i <= renderEndIndex; i++) {
+        const itemStyle: CSSProperties = {
+          position: "absolute",
+          top: i * itemSize,
+          left: 0,
+          right: 0,
+          height: itemSize,
+        };
 
-      const itemContent = renderItem(i, itemStyle);
+        const itemContent = renderItem(i, itemStyle);
 
-      if (isValidElement(itemContent)) {
-        items.push(
-          cloneElement(itemContent, {
-            key: i,
-            role: "listitem",
-          } as ItemProps)
-        );
+        if (isValidElement(itemContent)) {
+          result.push(
+            cloneElement(itemContent, {
+              key: i,
+              role: "listitem",
+            } as ItemProps)
+          );
+        }
       }
-    }
+      return result;
+    }, [renderStartIndex, renderEndIndex, itemSize, renderItem]);
+
+    const containerStyle = useMemo<CSSProperties>(
+      () => ({
+        overflow: "auto",
+        height,
+        ...style,
+      }),
+      [height, style]
+    );
+
+    const innerStyle = useMemo<CSSProperties>(
+      () => ({
+        position: "relative",
+        height: totalHeight,
+        width: "100%",
+      }),
+      [totalHeight]
+    );
 
     return (
       <div
         ref={containerRef}
         role="list"
         className={className}
-        style={{
-          overflow: "auto",
-          height,
-          ...style,
-        }}
+        style={containerStyle}
       >
-        <div
-          style={{
-            position: "relative",
-            height: totalHeight,
-            width: "100%",
-          }}
-        >
-          {items}
-        </div>
+        <div style={innerStyle}>{items}</div>
       </div>
     );
   }
