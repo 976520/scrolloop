@@ -24,6 +24,11 @@ export default defineConfig({
   },
   target: "es2024",
   external: ["react"],
+  outExtension({ format }) {
+    return {
+      js: format === "esm" ? ".mjs" : ".cjs",
+    };
+  },
   esbuildOptions(options) {
     options.legalComments = "none";
   },

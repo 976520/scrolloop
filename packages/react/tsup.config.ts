@@ -1,19 +1,19 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ['src/index.ts'],
-  format: ['cjs', 'esm'],
+  entry: ["src/index.ts"],
+  format: ["cjs", "esm"],
   dts: true,
   clean: true,
-  sourcemap: process.env.NODE_ENV === 'development',
+  sourcemap: process.env.NODE_ENV === "development",
   treeshake: true,
-  minify: 'terser',
+  minify: "terser",
   terserOptions: {
     compress: {
       passes: 2,
       drop_console: true,
       drop_debugger: true,
-      pure_funcs: ['console.log', 'console.debug'],
+      pure_funcs: ["console.log", "console.debug"],
     },
     mangle: {
       safari10: false,
@@ -22,10 +22,15 @@ export default defineConfig({
       comments: false,
     },
   },
-  target: 'es2024',
-  external: ['react', 'react-dom'],
+  target: "es2024",
+  external: ["react", "react-dom"],
+  noExternal: ["@scrolloop/core", "@scrolloop/shared"],
+  outExtension({ format }) {
+    return {
+      js: format === "esm" ? ".mjs" : ".cjs",
+    };
+  },
   esbuildOptions(options) {
-    options.legalComments = 'none';
+    options.legalComments = "none";
   },
 });
-
