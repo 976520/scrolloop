@@ -1,6 +1,6 @@
 import { useEffect, memo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import type { InfiniteListProps } from "../types";
+import type { InfiniteListProps, Range } from "../types";
 import { VirtualList } from "./VirtualList";
 import { useInfinitePages, findMissingPages } from "@scrolloop/shared";
 
@@ -56,10 +56,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     overscan,
   ]);
 
-  const handleRangeChange = (range: {
-    startIndex: number;
-    endIndex: number;
-  }) => {
+  const handleRangeChange = (range: Range) => {
     const prefetchStart = Math.max(
       0,
       Math.floor(range.startIndex / pageSize) -
