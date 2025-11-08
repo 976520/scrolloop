@@ -3,7 +3,7 @@ import type { PageResponse, Range } from "@scrolloop/shared";
 
 export type { PageResponse, Range };
 
-export type SSRTransitionState =
+export type TransitionState =
   | { type: "SSR_DOM" }
   | { type: "HYDRATED" }
   | { type: "SWITCHING"; snapshot: TransitionSnapshot }
