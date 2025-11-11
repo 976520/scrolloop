@@ -3,6 +3,27 @@ import type { PageResponse, Range } from "@scrolloop/shared";
 
 export type { PageResponse, Range };
 
+export type TransitionState =
+  | { type: "SSR_DOM" }
+  | { type: "HYDRATED" }
+  | { type: "SWITCHING"; snapshot: TransitionSnapshot }
+  | { type: "VIRTUALIZED" };
+export interface TransitionSnapshot {
+  scrollTop: number;
+  viewportHeight: number;
+  firstVisibleIndex: number;
+  focusedElement: HTMLElement | null;
+  focusedElementId: string | null;
+  itemMeasurements: Map<number, number>;
+}
+
+export interface TransitionStrategy {
+  switchTrigger?: "immediate" | "first-interaction" | "idle";
+  transitionStrategy?: "abort" | "replace-offscreen";
+  pruneStrategy?: "idle" | "chunk";
+  chunkSize?: number;
+}
+
 export interface ItemProps extends HTMLAttributes<HTMLElement> {
   key: number | string;
   role?: string;
@@ -43,4 +64,24 @@ export interface InfiniteListProps<T> {
 
   onPageLoad?: (page: number, items: T[]) => void;
   onError?: (error: Error) => void;
+
+  isSSR?: boolean;
+  transitionStrategy?: TransitionStrategy;
+
+  initialData?: T[];
+  initialTotal?: number;
+}
+
+export interface FullListProps<T> {
+  items: (T | undefined)[];
+  renderItem: (
+    item: T | undefined,
+    index: number,
+    style: CSSProperties
+  ) => ReactNode;
+  itemSize: number;
+  height?: number;
+  className?: string;
+  style?: CSSProperties;
+  "data-ssr-list"?: boolean;
 }
