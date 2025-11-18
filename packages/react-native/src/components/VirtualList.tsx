@@ -14,7 +14,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import type { VirtualListProps, ItemProps } from "../types";
-import { calculateVirtualRange } from "@scrolloop/core";
+import { calculateVirtualRange, clamp } from "@scrolloop/core";
 
 export const VirtualList = memo<VirtualListProps>(
   ({
@@ -36,9 +36,10 @@ export const VirtualList = memo<VirtualListProps>(
     });
 
     const totalHeight = count * itemSize;
+    const maxScrollTop = Math.max(0, totalHeight - height);
 
-    const scrollTop = scrollTopRef.current;
-    const prevScrollTop = prevScrollTopRef.current;
+    const scrollTop = clamp(0, scrollTopRef.current, maxScrollTop);
+    const prevScrollTop = clamp(0, prevScrollTopRef.current, maxScrollTop);
 
     const { renderStart: renderStartIndex, renderEnd: renderEndIndex } =
       calculateVirtualRange(
