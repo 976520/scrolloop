@@ -27,8 +27,8 @@ export const VirtualList = memo<VirtualListProps>(
     onRangeChange,
     ...scrollViewProps
   }) => {
-    const scrollTopRef = useRef(0);
-    const prevScrollTopRef = useRef(0);
+    const clampedScrollTopRef = useRef(0);
+    const prevClampedScrollTopRef = useRef(0);
     const [, forceUpdate] = useState(0);
     const prevRangeRef = useRef<{ start: number; end: number }>({
       start: -1,
@@ -38,8 +38,8 @@ export const VirtualList = memo<VirtualListProps>(
     const totalHeight = count * itemSize;
     const maxScrollTop = Math.max(0, totalHeight - height);
 
-    const scrollTop = clamp(0, scrollTopRef.current, maxScrollTop);
-    const prevScrollTop = clamp(0, prevScrollTopRef.current, maxScrollTop);
+    const scrollTop = clampedScrollTopRef.current;
+    const prevScrollTop = prevClampedScrollTopRef.current;
 
     const { renderStart: renderStartIndex, renderEnd: renderEndIndex } =
       calculateVirtualRange(
@@ -55,12 +55,13 @@ export const VirtualList = memo<VirtualListProps>(
       (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const newScrollTop = event.nativeEvent.contentOffset.y;
 
-        prevScrollTopRef.current = scrollTopRef.current;
-        scrollTopRef.current = newScrollTop;
+        const clampedNewScrollTop = clamp(0, newScrollTop, maxScrollTop);
+        prevClampedScrollTopRef.current = clampedScrollTopRef.current;
+        clampedScrollTopRef.current = clampedNewScrollTop;
 
         forceUpdate((prev) => prev + 1);
       },
-      []
+      [maxScrollTop]
     );
 
     if (
