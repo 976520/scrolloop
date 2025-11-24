@@ -4,6 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "package.json", "tsup.config.ts"],
       "outputs": ["dist/**"]
     },
     "test": {
