@@ -35,7 +35,7 @@ const FullListInner = <T,>(
 
       return (
         <div
-          key={index}
+          key={index} // WARN: Using index as key is not recommended for dynamic lists. Ensure items are stable.
           data-item-index={index}
           data-ssr-item={true}
           style={itemStyle}
