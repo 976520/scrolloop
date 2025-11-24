@@ -45,9 +45,9 @@ describe("Virtualizer", () => {
     });
 
     const state = virtualizer.getState();
-    // Visible: 500 / 50 = 10 items.
-    // Render: 0 to 9 + 2 overscan = 0 to 11. Total 12 items.
-    expect(state.virtualItems.length).toBeGreaterThan(0);
+    // visibleRange.endIndex is 10, so the rendered items range is
+    // 0-12 including overscan. (Total 13 items)
+    expect(state.virtualItems).toHaveLength(13);
     expect(state.visibleRange.startIndex).toBe(0);
     expect(state.visibleRange.endIndex).toBe(10);
   });
