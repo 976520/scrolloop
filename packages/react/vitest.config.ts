@@ -13,6 +13,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    exclude: ["src/__tests__/ssr/ssr.e2e.test.ts"],
     testTimeout: 10000,
     hookTimeout: 10000,
     pool: "forks",

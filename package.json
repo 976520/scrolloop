@@ -42,6 +42,8 @@
     "dev": "turbo run dev",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
+    "test:ssr": "pnpm --filter @scrolloop/react test:ssr",
+    "test:e2e": "pnpm --filter @scrolloop/react test:e2e",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "build:legacy": "tsup",
