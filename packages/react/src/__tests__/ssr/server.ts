@@ -51,7 +51,7 @@ app.get("/", async (_req: Request, res: Response) => {
       itemSize: 50,
       height: 400,
       pageSize: 20,
-      isSSR: true,
+      isServerSide: true,
       initialData,
       initialTotal: initialData.length,
     })

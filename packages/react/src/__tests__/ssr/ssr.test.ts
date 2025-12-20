@@ -49,7 +49,7 @@ describe("SSR - renderToString", () => {
         itemSize: 50,
         height: 400,
         pageSize: 20,
-        isSSR: true,
+        isServerSide: true,
         initialData,
         initialTotal: initialData.length,
       })
@@ -94,7 +94,7 @@ describe("SSR - renderToString", () => {
         itemSize: 50,
         height: 400,
         pageSize: 20,
-        isSSR: true,
+        isServerSide: true,
         initialData,
         initialTotal: initialData.length,
       })
@@ -129,7 +129,7 @@ describe("SSR - renderToString", () => {
           ),
         itemSize: 50,
         height: 400,
-        isSSR: true,
+        isServerSide: true,
         initialData,
         initialTotal: initialData.length,
       })

@@ -6,7 +6,7 @@ import { useInfinitePages, findMissingPages } from "@scrolloop/shared";
 import { useTransition } from "../hooks/useTransition";
 import { calculateVirtualRange } from "@scrolloop/core";
 import type { CSSProperties } from "react";
-import { isSSR as isSSREnvironment } from "../utils/isSSR";
+import { isServerSide as isServerSideEnvironment } from "../utils/isServerSide";
 
 function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   const {
@@ -25,7 +25,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     renderEmpty,
     onPageLoad,
     onError,
-    isSSR = false,
+    isServerSide = false,
     transitionStrategy,
     initialData,
     initialTotal,
@@ -42,7 +42,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   const initialTotalRef = useRef(0);
   const initialHasMoreRef = useRef(true);
 
-  if (isSSR && initialData && initialData.length > 0) {
+  if (isServerSide && initialData && initialData.length > 0) {
     const initialPages = new Map<number, T[]>();
     const totalPages = Math.ceil(initialData.length / pageSize);
 
@@ -69,7 +69,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     });
 
   const mergedPages = useMemo(() => {
-    if (isSSR && initialPagesRef.current.size > 0) {
+    if (isServerSide && initialPagesRef.current.size > 0) {
       const merged = new Map(pages);
       initialPagesRef.current.forEach((items, pageNum) => {
         if (!merged.has(pageNum)) {
@@ -79,24 +79,24 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
       return merged;
     }
     return pages;
-  }, [pages, isSSR]);
+  }, [pages, isServerSide]);
 
   const mergedTotal = useMemo(() => {
-    if (isSSR && initialTotalRef.current > 0) {
+    if (isServerSide && initialTotalRef.current > 0) {
       return Math.max(initialTotalRef.current, allItems.length);
     }
     return allItems.length;
-  }, [isSSR, allItems.length]);
+  }, [isServerSide, allItems.length]);
 
   const mergedHasMore = useMemo(() => {
-    if (isSSR && initialPagesRef.current.size > 0) {
+    if (isServerSide && initialPagesRef.current.size > 0) {
       return initialHasMoreRef.current || hasMore;
     }
     return hasMore;
-  }, [isSSR, hasMore]);
+  }, [isServerSide, hasMore]);
 
   const mergedAllItems = useMemo(() => {
-    if (isSSR && initialData && initialData.length > 0) {
+    if (isServerSide && initialData && initialData.length > 0) {
       const items: (T | undefined)[] = new Array(mergedTotal);
 
       initialData.forEach((item, index) => {
@@ -113,10 +113,10 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
       return items;
     }
     return allItems;
-  }, [isSSR, initialData, mergedTotal, mergedPages, pageSize, allItems]);
+  }, [isServerSide, initialData, mergedTotal, mergedPages, pageSize, allItems]);
 
   useEffect(() => {
-    if (!isSSR && mergedPages.size === 0 && !error) {
+    if (!isServerSide && mergedPages.size === 0 && !error) {
       const totalNeededItems = Math.ceil(height / itemSize) + overscan * 2;
       for (
         let page = 0;
@@ -126,7 +126,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
         loadPage(page);
     }
   }, [
-    isSSR,
+    isServerSide,
     mergedPages.size,
     loadPage,
     initialPage,
@@ -152,7 +152,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     return { start: renderStart, end: renderEnd };
   }, [height, itemSize, mergedAllItems.length, overscan]);
 
-  const shouldUseTransition = isSSR;
+  const shouldUseTransition = isServerSide;
   const { isVirtualized } = useTransition({
     enabled: shouldUseTransition,
     containerRef,
@@ -164,7 +164,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 
   const handleRangeChange = useCallback(
     (range: { startIndex: number; endIndex: number }) => {
-      if (isSSR && !isVirtualized) {
+      if (isServerSide && !isVirtualized) {
         scrollTopRef.current = containerRef.current?.scrollTop ?? 0;
         return;
       }
@@ -186,7 +186,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
       }
     },
     [
-      isSSR,
+      isServerSide,
       isVirtualized,
       pageSize,
       prefetchThreshold,
@@ -198,7 +198,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   );
 
   useEffect(() => {
-    if (!isSSR || !containerRef.current) return;
+    if (!isServerSide || !containerRef.current) return;
 
     const container = containerRef.current;
     const handleScroll = () => {
@@ -207,7 +207,7 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [isSSR]);
+  }, [isServerSide]);
 
   const virtualListRenderItem = useCallback(
     (index: number, itemStyle: CSSProperties) => {
@@ -318,7 +318,8 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     );
   }
 
-  const shouldRenderFullList = isSSREnvironment() || (isSSR && !isVirtualized);
+  const shouldRenderFullList =
+    isServerSideEnvironment() || (isServerSide && !isVirtualized);
 
   if (shouldRenderFullList) {
     return (

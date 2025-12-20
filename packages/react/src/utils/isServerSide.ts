@@ -1,3 +1,3 @@
-export function isSSR(): boolean {
+export function isServerSide(): boolean {
   return typeof window === "undefined";
 }

@@ -65,7 +65,7 @@ export interface InfiniteListProps<T> {
   onPageLoad?: (page: number, items: T[]) => void;
   onError?: (error: Error) => void;
 
-  isSSR?: boolean;
+  isServerSide?: boolean;
   transitionStrategy?: TransitionStrategy;
 
   initialData?: T[];
