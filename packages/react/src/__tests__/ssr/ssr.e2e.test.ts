@@ -59,3 +59,19 @@ test("should have correct structure for SEO", async ({ page }) => {
   const listContainer = page.locator('[data-ssr-list="true"]');
   await expect(listContainer).toHaveAttribute("role", "list");
 });
+
+test("should hydrate and switch to virtual list", async ({ page }) => {
+  await page.goto(`http://localhost:${port}`);
+
+  // Initial SSR render (FullList)
+  await expect(page.locator('[data-ssr-list="true"]')).toBeVisible();
+
+  // Wait for hydration and virtualization switch
+  // The library switches to VirtualList after hydration, so [data-ssr-list] attribute should be removed
+  await expect(page.locator('[data-ssr-list="true"]')).toBeHidden({
+    timeout: 5000,
+  });
+
+  // Check if items are still visible (rendered by VirtualList)
+  await expect(page.getByText("Item 0")).toBeVisible();
+});

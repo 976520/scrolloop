@@ -4,6 +4,8 @@ import React from "react";
 import { InfiniteList } from "../../components/InfiniteList";
 import type { PageResponse } from "../../types";
 import type { CSSProperties } from "react";
+import * as esbuild from "esbuild";
+import path from "path";
 
 const app: Express = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -12,6 +14,29 @@ interface TestItem {
   id: number;
   name: string;
 }
+
+let clientBundle = "";
+try {
+  const result = esbuild.buildSync({
+    entryPoints: [path.resolve(__dirname, "./client.tsx")],
+    bundle: true,
+    write: false,
+    format: "esm",
+    target: "es2020",
+    platform: "browser",
+    define: {
+      "process.env.NODE_ENV": '"development"',
+    },
+  });
+  clientBundle = result.outputFiles[0].text;
+} catch (e) {
+  console.error("Failed to bundle client code:", e);
+}
+
+app.get("/bundle.js", (_req, res) => {
+  res.header("Content-Type", "application/javascript");
+  res.send(clientBundle);
+});
 
 app.get("/", async (_req: Request, res: Response) => {
   const initialData: TestItem[] = Array(50)
@@ -62,12 +87,13 @@ app.get("/", async (_req: Request, res: Response) => {
     <html>
       <head>
         <title>SSR Test</title>
-        <script type="module">
-          console.log(document.querySelectorAll('[data-ssr-item]').length, 'items');
-        </script>
+        <style>
+          body { margin: 0; padding: 20px; font-family: sans-serif; }
+        </style>
       </head>
       <body>
         <div id="root">${html}</div>
+        <script type="module" src="/bundle.js"></script>
       </body>
     </html>
   `);
