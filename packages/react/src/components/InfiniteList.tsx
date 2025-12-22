@@ -6,6 +6,7 @@ import { useInfinitePages, findMissingPages } from "@scrolloop/shared";
 import { useTransition } from "../hooks/useTransition";
 import { calculateVirtualRange } from "@scrolloop/core";
 import type { CSSProperties } from "react";
+import { isSSR as isSSREnvironment } from "../utils/isSSR";
 
 function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   const {
@@ -151,8 +152,9 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     return { start: renderStart, end: renderEnd };
   }, [height, itemSize, mergedAllItems.length, overscan]);
 
+  const shouldUseTransition = isSSR;
   const { isVirtualized } = useTransition({
-    enabled: isSSR,
+    enabled: shouldUseTransition,
     containerRef,
     itemSize,
     totalItems: mergedAllItems.length,
@@ -196,6 +198,8 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   );
 
   useEffect(() => {
+    if (isSSREnvironment()) return;
+
     if (!isSSR || !containerRef.current) return;
 
     const container = containerRef.current;
@@ -316,7 +320,9 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     );
   }
 
-  if (isSSR && !isVirtualized) {
+  const shouldRenderFullList = isSSREnvironment() || (isSSR && !isVirtualized);
+
+  if (shouldRenderFullList) {
     return (
       <FullList
         ref={containerRef}
