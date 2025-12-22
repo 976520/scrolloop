@@ -16,8 +16,6 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,9 +51,13 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
       - name: Test
         run: |
           if pnpm run | grep -q "^ *test *"; then pnpm test; else echo "no test script"; fi
+          pnpm --filter @scrolloop/react test:e2e
 
       - name: Build
         run: pnpm run build
