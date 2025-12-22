@@ -6,7 +6,6 @@ import {
 } from "../utils/domPruner";
 import type { TransitionState, TransitionStrategy } from "../types";
 import { captureSnapshot, restoreSnapshot } from "../utils/transitionSnapshot";
-import { isSSR } from "../utils/isSSR";
 
 interface useTransitionOptions {
   enabled: boolean;
@@ -38,8 +37,6 @@ export function useTransition({
   const transitionStrategy = { ...defaultTransitionStrategy, ...strategy };
 
   useEffect(() => {
-    if (isSSR()) return;
-
     if (!enabled || isHydratedRef.current) return;
 
     const checkHydration = () => {
@@ -57,8 +54,6 @@ export function useTransition({
   }, [enabled, containerRef]);
 
   useEffect(() => {
-    if (isSSR()) return;
-
     if (!enabled || state.type !== "HYDRATED") return;
 
     const container = containerRef.current;

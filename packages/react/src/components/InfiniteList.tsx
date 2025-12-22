@@ -198,8 +198,6 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   );
 
   useEffect(() => {
-    if (isSSREnvironment()) return;
-
     if (!isSSR || !containerRef.current) return;
 
     const container = containerRef.current;
