@@ -1,22 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { startServer } from "./server";
 
-let server: any;
-let port: number;
-
-test.beforeAll(async () => {
-  const result = await startServer();
-  server = result.server;
-  port = result.port;
-});
-
-test.afterAll(async () => {
-  if (server) {
-    await new Promise<void>((resolve) => {
-      server.close(() => resolve());
-    });
-  }
-});
+const port = 3001;
 
 test("should render SSR HTML with initial data", async ({ page }) => {
   await page.goto(`http://localhost:${port}`);
