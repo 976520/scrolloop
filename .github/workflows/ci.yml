@@ -82,24 +82,21 @@ jobs:
             
             let message = '## 📊 Test Coverage Report (vitest) \n\n';
             
-            message += '| Type | ' + validPackages.map(pkg => `@scrolloop/${pkg}`).join(' | ') + ' |\n';
-            message += '| :--- | ' + validPackages.map(() => ':---').join(' | ') + ' |\n';
+            message += '| Package | Statements | Branches | Functions | Lines |\n';
+            message += '| :--- | :--- | :--- | :--- | :--- |\n';
             
-            const metrics = [
-              { key: 'statements', label: 'Statements' },
-              { key: 'branches', label: 'Branches' },
-              { key: 'functions', label: 'Functions' },
-              { key: 'lines', label: 'Lines' }
-            ];
+            const metrics = ['statements', 'branches', 'functions', 'lines'];
             
-            for (const metric of metrics) {
-              message += `| **${metric.label}** |`;
+            for (const pkg of validPackages) {
+              const summaryPath = path.join(packagesDir, pkg, 'coverage', 'coverage-summary.json');
+              const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              const total = summary.total;
               
-              for (const pkg of validPackages) {
-                const summaryPath = path.join(packagesDir, pkg, 'coverage', 'coverage-summary.json');
-                const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
-                const data = summary.total[metric.key];
-                message += `${data.covered}/${data.total} (${data.pct}%) |`;
+              message += `| **@scrolloop/${pkg}** |`;
+              
+              for (const metric of metrics) {
+                const data = total[metric];
+                message += ` ${data.covered}/${data.total} (${data.pct}%) |`;
               }
               message += '\n';
             }
