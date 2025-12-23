@@ -72,39 +72,44 @@ jobs:
             if (!fs.existsSync(packagesDir)) return;
             
             const dirs = fs.readdirSync(packagesDir);
-            let message = '## 📊 Test Coverage Report\n\n';
-            let hasCoverage = false;
             
-            for (const dir of dirs) {
+            const validPackages = dirs.filter(dir => {
               const summaryPath = path.join(packagesDir, dir, 'coverage', 'coverage-summary.json');
-              if (fs.existsSync(summaryPath)) {
-                hasCoverage = true;
+              return fs.existsSync(summaryPath);
+            });
+            
+            if (validPackages.length === 0) return;
+            
+            let message = '## 📊 Test Coverage Report (vitest) \n\n';
+            
+            message += '| Type | ' + validPackages.map(pkg => `@scrolloop/${pkg}`).join(' | ') + ' |\n';
+            message += '| :--- | ' + validPackages.map(() => ':---').join(' | ') + ' |\n';
+            
+            const metrics = [
+              { key: 'statements', label: 'Statements' },
+              { key: 'branches', label: 'Branches' },
+              { key: 'functions', label: 'Functions' },
+              { key: 'lines', label: 'Lines' }
+            ];
+            
+            for (const metric of metrics) {
+              message += `| **${metric.label}** |`;
+              
+              for (const pkg of validPackages) {
+                const summaryPath = path.join(packagesDir, pkg, 'coverage', 'coverage-summary.json');
                 const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
-                const total = summary.total;
-                
-                message += `### @scrolloop/${dir}\n\n`;
-                message += '| Type | % | Covered | Total |\n';
-                message += '| :--- | :--- | :--- | :--- |\n';
-                
-                const formatRow = (label, data) => {
-                  return `| ${label} | ${data.pct}% | ${data.covered} | ${data.total} |`;
-                };
-                
-                message += formatRow('Statements', total.statements) + '\n';
-                message += formatRow('Branches', total.branches) + '\n';
-                message += formatRow('Functions', total.functions) + '\n';
-                message += formatRow('Lines', total.lines) + '\n\n';
+                const data = summary.total[metric.key];
+                message += `${data.covered}/${data.total} (${data.pct}%) |`;
               }
+              message += '\n';
             }
             
-            if (hasCoverage) {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: message
-              });
-            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
 
       - name: Build
         run: pnpm run build
