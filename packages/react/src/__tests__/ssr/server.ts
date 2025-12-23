@@ -35,6 +35,7 @@ try {
   clientBundle = result.outputFiles[0].text;
 } catch (e) {
   console.error("Failed to bundle client code:", e);
+  process.exit(1);
 }
 
 app.get("/bundle.js", (_req, res) => {
