@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -56,8 +57,54 @@ jobs:
 
       - name: Test
         run: |
-          if pnpm run | grep -q "^ *test *"; then pnpm test; else echo "no test script"; fi
+          if pnpm run | grep -q "^ *test *"; then pnpm test -- --coverage; else echo "no test script"; fi
           pnpm --filter @scrolloop/react test:e2e
+
+      - name: Report Coverage
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const packagesDir = 'packages';
+            if (!fs.existsSync(packagesDir)) return;
+            
+            const dirs = fs.readdirSync(packagesDir);
+            let message = '## 📊 Test Coverage Report\n\n';
+            let hasCoverage = false;
+            
+            for (const dir of dirs) {
+              const summaryPath = path.join(packagesDir, dir, 'coverage', 'coverage-summary.json');
+              if (fs.existsSync(summaryPath)) {
+                hasCoverage = true;
+                const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+                const total = summary.total;
+                
+                message += `### @scrolloop/${dir}\n\n`;
+                message += '| Type | % | Covered | Total |\n';
+                message += '| :--- | :--- | :--- | :--- |\n';
+                
+                const formatRow = (label, data) => {
+                  return `| ${label} | ${data.pct}% | ${data.covered} | ${data.total} |`;
+                };
+                
+                message += formatRow('Statements', total.statements) + '\n';
+                message += formatRow('Branches', total.branches) + '\n';
+                message += formatRow('Functions', total.functions) + '\n';
+                message += formatRow('Lines', total.lines) + '\n\n';
+              }
+            }
+            
+            if (hasCoverage) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: message
+              });
+            }
 
       - name: Build
         run: pnpm run build
