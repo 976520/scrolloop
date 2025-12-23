@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Virtualizer } from "./Virtualizer";
-import { FixedLayoutStrategy } from "../strategies/layout/FixedLayoutStrategy";
-import { VirtualScrollSource } from "../strategies/scroll/VirtualScrollSource";
-import { Plugin } from "../plugins/Plugin";
-import { VirtualizerState, Range } from "../types";
+import { Virtualizer } from "../Virtualizer";
+import { FixedLayoutStrategy } from "../../strategies/layout/FixedLayoutStrategy";
+import { VirtualScrollSource } from "../../strategies/scroll/VirtualScrollSource";
+import { Plugin } from "../../plugins/Plugin";
+import { VirtualizerState, Range } from "../../types";
 
 describe("Virtualizer", () => {
   let layoutStrategy: FixedLayoutStrategy;

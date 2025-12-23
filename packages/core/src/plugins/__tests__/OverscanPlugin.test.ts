@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { OverscanPlugin } from "./OverscanPlugin";
-import { Range } from "../types";
+import { OverscanPlugin } from "../OverscanPlugin";
+import { Range } from "../../types";
 
 describe("OverscanPlugin", () => {
   it("should initialize with default overscan", () => {

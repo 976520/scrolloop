@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { VirtualScrollSource } from "./VirtualScrollSource";
+import { VirtualScrollSource } from "../VirtualScrollSource";
 
 describe("VirtualScrollSource", () => {
   it("should initialize with default values", () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateVirtualRange } from "./calculateVirtualRange";
+import { calculateVirtualRange } from "../calculateVirtualRange";
 
 describe("calculateVirtualRange", () => {
   const defaultParams = {
