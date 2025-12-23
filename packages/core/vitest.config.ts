@@ -15,7 +15,7 @@ export default defineConfig({
     hookTimeout: 10000,
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "html", "json-summary"],
       exclude: [
         "node_modules/",
         "dist/",
@@ -24,6 +24,9 @@ export default defineConfig({
         "**/index.ts",
         "**/*.test.{ts,tsx}",
         "**/*.spec.{ts,tsx}",
+        "**/Plugin.ts",
+        "**/LayoutStrategy.ts",
+        "**/ScrollSource.ts",
       ],
     },
   },

@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -16,8 +17,6 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,9 +52,61 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
       - name: Test
         run: |
-          if pnpm run | grep -q "^ *test *"; then pnpm test; else echo "no test script"; fi
+          if pnpm run | grep -q "^ *test *"; then pnpm test -- --coverage; else echo "no test script"; fi
+          pnpm --filter @scrolloop/react test:e2e
+
+      - name: Report Coverage
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const packagesDir = 'packages';
+            if (!fs.existsSync(packagesDir)) return;
+            
+            const dirs = fs.readdirSync(packagesDir);
+            
+            const validPackages = dirs.filter(dir => {
+              const summaryPath = path.join(packagesDir, dir, 'coverage', 'coverage-summary.json');
+              return fs.existsSync(summaryPath);
+            });
+            
+            if (validPackages.length === 0) return;
+            
+            let message = '## 📊 Test Coverage Report (vitest) \n\n';
+            
+            message += '| Package | Statements | Branches | Functions | Lines |\n';
+            message += '| :--- | :--- | :--- | :--- | :--- |\n';
+            
+            const metrics = ['statements', 'branches', 'functions', 'lines'];
+            
+            for (const pkg of validPackages) {
+              const summaryPath = path.join(packagesDir, pkg, 'coverage', 'coverage-summary.json');
+              const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              const total = summary.total;
+              
+              message += `| **@scrolloop/${pkg}** |`;
+              
+              for (const metric of metrics) {
+                const data = total[metric];
+                message += ` ${data.covered}/${data.total} (${data.pct}%) |`;
+              }
+              message += '\n';
+            }
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
 
       - name: Build
         run: pnpm run build

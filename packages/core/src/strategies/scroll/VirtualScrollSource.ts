@@ -1,4 +1,4 @@
-import type { ScrollSource } from './ScrollSource';
+import type { ScrollSource } from "./ScrollSource";
 
 export class VirtualScrollSource implements ScrollSource {
   private scrollOffset = 0;
@@ -21,7 +21,10 @@ export class VirtualScrollSource implements ScrollSource {
   }
 
   setViewportSize(size: number): void {
-    this.viewportSize = size;
+    if (this.viewportSize !== size) {
+      this.viewportSize = size;
+      this.notifyListeners();
+    }
   }
 
   subscribe(callback: (offset: number) => void): () => void {
@@ -35,4 +38,3 @@ export class VirtualScrollSource implements ScrollSource {
     this.listeners.forEach((listener) => listener(this.scrollOffset));
   }
 }
-

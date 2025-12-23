@@ -5,3 +5,6 @@ dist/
 *.tsbuildinfo
 .turbo
 .pnpm-store
+./packages/react/playwright-report
+./packages/react/test-results
+coverage/
