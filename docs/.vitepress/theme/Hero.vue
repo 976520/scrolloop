@@ -38,9 +38,9 @@ const startInitialAnimation = () => {
     kbCount.value = value;
   });
 
-  animateCountUp(1000000, 2500, (value) => {
+  animateCountUp(1048596, 2500, (value) => {
     millionsCount.value = value;
-    if (value >= 1000000) {
+    if (value >= 1048596) {
       if (!window.__incrementStarted) {
         window.__incrementStarted = true;
         setInterval(() => {
