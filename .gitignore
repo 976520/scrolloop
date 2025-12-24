@@ -8,3 +8,4 @@ dist/
 ./packages/react/playwright-report
 ./packages/react/test-results
 coverage/
+cache/
