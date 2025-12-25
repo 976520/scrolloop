@@ -5,7 +5,7 @@
     "type": "git",
     "url": "git+https://github.com/976520/scrolloop.git"
   },
-  "description": "Just a virtual scrolling library for React",
+  "description": "The modern scrolling component for React and React Native",
   "type": "module",
   "workspaces": [
     "packages/*"
