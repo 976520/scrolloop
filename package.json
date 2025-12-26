@@ -1,6 +1,6 @@
 {
   "name": "scrolloop",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/976520/scrolloop.git"
@@ -42,10 +42,15 @@
     "dev": "turbo run dev",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
+    "test:ssr": "pnpm --filter @scrolloop/react test:ssr",
+    "test:e2e": "pnpm --filter @scrolloop/react test:e2e",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "build:legacy": "tsup",
     "dev:legacy": "tsup --config tsup.dev.ts --watch",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "prepare": "husky"
   },
   "keywords": [
@@ -89,6 +94,8 @@
     "tsup": "^8.0.0",
     "turbo": "^2.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^2.0.0"
+    "vitepress": "^1.6.4",
+    "vitest": "^2.0.0",
+    "vue": "^3.5.26"
   }
 }
