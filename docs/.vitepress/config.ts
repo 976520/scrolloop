@@ -19,7 +19,7 @@ export default defineConfig({
     logo: "/logo.svg",
     nav: [
       { text: "가이드", link: "/guide/introduction" },
-      { text: "API 레퍼런스", link: "/api/reference" },
+      { text: "컴포넌트", link: "/guide/virtual-list" },
     ],
 
     sidebar: {
@@ -27,25 +27,21 @@ export default defineConfig({
         {
           text: "Getting Started",
           items: [
-            { text: "Scrolloop 소개", link: "/guide/introduction" },
-            { text: "Quick start", link: "/guide/quick-start" },
-            { text: "핵심 개념", link: "/guide/core-concepts" },
+            { text: "introduction", link: "/guide/introduction" },
+            { text: "quick-start", link: "/guide/quick-start" },
+            { text: "concepts", link: "/guide/concepts" },
           ],
         },
         {
-          text: "가이드",
+          text: "Components",
           items: [
-            { text: "React에서 사용하기", link: "/guide/react" },
-            { text: "무한 스크롤", link: "/guide/infinite-scroll" },
-            { text: "React Native 지원", link: "/guide/react-native" },
-            { text: "SSR 지원", link: "/guide/ssr" },
+            { text: "VirtualList", link: "/guide/virtual-list" },
+            { text: "InfiniteList", link: "/guide/infinite-list" },
           ],
         },
-      ],
-      "/api/": [
         {
-          text: "API Reference",
-          items: [{ text: "기본 참조", link: "/api/reference" }],
+          text: "Advanced",
+          items: [{ text: "SSR Guide", link: "/guide/ssr" }],
         },
       ],
     },
@@ -61,16 +57,16 @@ export default defineConfig({
           root: {
             translations: {
               button: {
-                buttonText: "검색",
-                buttonAriaLabel: "검색",
+                buttonText: "search...",
+                buttonAriaLabel: "search",
               },
               modal: {
-                noResultsText: "결과가 없습니다.",
-                resetButtonTitle: "재설정",
+                noResultsText: "no results.",
+                resetButtonTitle: "reset",
                 footer: {
-                  selectText: "선택",
-                  navigateText: "이동",
-                  closeText: "닫기",
+                  selectText: "select",
+                  navigateText: "navigate",
+                  closeText: "close",
                 },
               },
             },

@@ -1,10 +1,6 @@
 # Quick start
 
-scrolloop로 1분 안에 고성능 리스트를 구현해 보세요.
-
-## 기본 사용법
-
-가장 기본적인 React 에서의 `VirtualList` 컴포넌트 사용 예시입니다.
+scrolloop로 1분 안에 windowing 리스트를 구현해 보세요.
 
 ```tsx
 import { VirtualList } from "@scrolloop/react";
@@ -29,16 +25,6 @@ function App() {
   );
 }
 ```
-
-## 핵심 Props
-
-| Prop         | Type       | Required | Description                                     |
-| :----------- | :--------- | :------- | :---------------------------------------------- |
-| `count`      | `number`   | Yes      | 전체 item의 개수                                |
-| `itemSize`   | `number`   | Yes      | 각 item의 높이                                  |
-| `renderItem` | `Function` | Yes      | 인덱스와 스타일을 받아 item을 렌더링하는 함수   |
-| `height`     | `number`   | No       | container의 높이 (기본값: 400)                  |
-| `overscan`   | `number`   | No       | 화면 밖에서 미리 렌더링할 item 개수 (기본값: 4) |
 
 ## Next step
 
