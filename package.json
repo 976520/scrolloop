@@ -48,6 +48,9 @@
     "lint": "turbo run lint",
     "build:legacy": "tsup",
     "dev:legacy": "tsup --config tsup.dev.ts --watch",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "prepare": "husky"
   },
   "keywords": [
@@ -91,6 +94,8 @@
     "tsup": "^8.0.0",
     "turbo": "^2.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^2.0.0"
+    "vitepress": "^1.6.4",
+    "vitest": "^2.0.0",
+    "vue": "^3.5.26"
   }
 }
