@@ -5,7 +5,7 @@ export default defineConfig({
   description: "The modern scrolling component for React and React Native.",
   appearance: false,
 
-  base: "/docs/",
+  base: "/scrolloop/",
 
   head: [
     ["link", { rel: "icon", href: "/favicon.ico" }],
