@@ -4,6 +4,8 @@ import SlotMachine from "./SlotMachine.vue";
 
 const millionsCount = ref(0);
 const kbCount = ref(0);
+const incrementStarted = ref(false);
+const timerId = ref(null);
 
 const animateCountUp = (targetValue, duration, callback) => {
   const startTime = performance.now();
@@ -41,9 +43,9 @@ const startInitialAnimation = () => {
   animateCountUp(1048596, 2500, (value) => {
     millionsCount.value = value;
     if (value >= 1048596) {
-      if (!window.__incrementStarted) {
-        window.__incrementStarted = true;
-        setInterval(() => {
+      if (!incrementStarted.value) {
+        incrementStarted.value = true;
+        timerId.value = setInterval(() => {
           millionsCount.value += Math.floor(Math.random() * 8) + 2;
         }, 100);
       }
@@ -64,6 +66,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
+  if (timerId.value) {
+    clearInterval(timerId.value);
+  }
 });
 </script>
 
