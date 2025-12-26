@@ -2,8 +2,7 @@ import { defineConfig } from "vitepress";
 
 export default defineConfig({
   title: "scrolloop",
-  description:
-    "The ultimate virtual scrolling component for React and React Native.",
+  description: "The modern scrolling component for React and React Native.",
   appearance: false,
 
   base: "/docs/",
