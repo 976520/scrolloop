@@ -116,7 +116,6 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Scroll Indicator -->
     <div
       class="scroll-indicator animate-on-scroll fade-in delay-500"
       :class="{ scrolled: scrolled }"

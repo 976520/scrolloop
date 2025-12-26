@@ -71,9 +71,7 @@ const isItemInViewport = (index: number) => {
       </div>
 
       <div class="panes-container">
-        <!-- Comparison Panes -->
         <div class="panes-wrapper">
-          <!-- Regular Side -->
           <div class="pane regular-pane">
             <div class="items-list" :style="{ transform: `translateY(${centeringOffset - scrollTop}px)` }">
               <div 
@@ -89,7 +87,6 @@ const isItemInViewport = (index: number) => {
 
           <div class="divider"></div>
 
-          <!-- Virtualized Side -->
           <div class="pane virtual-pane">
             <div class="items-list" :style="{ transform: `translateY(${centeringOffset - scrollTop}px)` }">
               <div 
@@ -109,7 +106,6 @@ const isItemInViewport = (index: number) => {
           </div>
         </div>
 
-        <!-- Viewport Overlay (Minimalist Grayscale) -->
         <div class="viewport-overlay" :style="{ height: `${viewportHeight}px`, top: `${centeringOffset}px` }">
           <div class="viewport-border top"></div>
           <div class="viewport-label-container">
@@ -120,7 +116,6 @@ const isItemInViewport = (index: number) => {
       </div>
     </div>
 
-    <!-- Footer -->
     <div class="visualizer-footer">
       <div class="controls-left">
         <div class="control-group">

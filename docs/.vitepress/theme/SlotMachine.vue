@@ -52,7 +52,6 @@ const getAnimationClass = (anim: DigitAnimation) => {
   return anim.direction === "up" ? "slot-enter-up" : "slot-enter-down";
 };
 
-// Initialize audio
 onMounted(() => {
   if (typeof window === "undefined") return;
 
@@ -66,7 +65,6 @@ onMounted(() => {
 
   audio.value = audioElement;
 
-  // Initialize digit animations
   const digits = String(props.value).split("");
   digitAnimations.value = digits.map((digit) => [
     {
@@ -86,7 +84,6 @@ onUnmounted(() => {
   }
 });
 
-// Watch for value changes
 watch(
   () => props.value,
   (newValue, oldValue) => {
@@ -98,23 +95,18 @@ watch(
     const now = Date.now();
     const timeSinceLastChange = now - lastChangeTime.value;
 
-    // Play sound effect from midpoint
     if (audio.value) {
       audio.value.currentTime = audioMidpoint.value;
       audio.value.play().catch(() => null);
     }
 
-    // Calculate speed based on how quickly value is changing
     const speed = Math.max(0.15, Math.min(0.4, timeSinceLastChange / 1000));
 
     const direction: "up" | "down" = newValue > prevValue.value ? "up" : "down";
-
-    // Handle length changes
     const maxLength = Math.max(currentDigits.length, previousDigits.length);
     const newAnimations: DigitAnimation[][] = [];
 
     for (let i = 0; i < maxLength; i++) {
-      // Calculate actual index from the right (to handle length changes)
       const currentIndex = currentDigits.length - maxLength + i;
       const prevIndex = previousDigits.length - maxLength + i;
 
@@ -163,7 +155,6 @@ watch(
       }
     }
 
-    // Only use positions that have current digits
     digitAnimations.value = currentDigits.map(
       (_, index) =>
         newAnimations[maxLength - currentDigits.length + index] || []
@@ -172,7 +163,6 @@ watch(
     lastChangeTime.value = now;
     prevValue.value = newValue;
 
-    // Clean up leaving animations after they complete
     setTimeout(() => {
       digitAnimations.value = digitAnimations.value.map((anims) =>
         anims.filter((anim) => !anim.isLeaving)
@@ -199,7 +189,6 @@ watch(
   justify-content: center;
 }
 
-/* Enter animations (new digit coming in) */
 .slot-enter-up {
   animation: slotEnterUp ease-out forwards;
 }
@@ -208,7 +197,6 @@ watch(
   animation: slotEnterDown ease-out forwards;
 }
 
-/* Leave animations (old digit going out) */
 .slot-leave-up {
   animation: slotLeaveUp ease-out forwards;
 }
@@ -217,7 +205,6 @@ watch(
   animation: slotLeaveDown ease-out forwards;
 }
 
-/* Keyframes for UP direction */
 @keyframes slotEnterUp {
   from {
     transform: translateY(100%);
@@ -240,7 +227,6 @@ watch(
   }
 }
 
-/* Keyframes for DOWN direction */
 @keyframes slotEnterDown {
   from {
     transform: translateY(-100%);

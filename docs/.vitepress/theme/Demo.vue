@@ -106,7 +106,6 @@ const codeLines = computed(() => {
       </p>
 
       <div class="demo-playground animate-on-scroll fade-up delay-200">
-        <!-- Real Virtual Scroll View -->
         <div class="demo-card glass">
           <div class="card-header">
             <span class="dot red"></span>
