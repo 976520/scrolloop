@@ -6,6 +6,8 @@ export default defineConfig({
     "The ultimate virtual scrolling component for React and React Native.",
   appearance: false,
 
+  base: "/docs/",
+
   head: [
     ["link", { rel: "icon", href: "/favicon.ico" }],
     ["meta", { name: "theme-color", content: "#7c3aed" }],
