@@ -29,5 +29,5 @@ function App() {
 ## Next step
 
 - [React 상세 가이드](./react)에서 더 다양한 기능을 확인하세요.
-- [무한 스크롤 구현](./infinite-scroll) 방법을 알아보세요.
+- [무한 스크롤 구현](./infinite-list) 방법을 알아보세요.
 - [React Native](./react-native)에서 사용하는 방법을 확인하세요.
