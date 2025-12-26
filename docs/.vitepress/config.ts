@@ -18,14 +18,14 @@ export default defineConfig({
   themeConfig: {
     logo: "/logo.svg",
     nav: [
-      { text: "가이드", link: "/guide/introduction" },
-      { text: "컴포넌트", link: "/guide/virtual-list" },
+      { text: "Guide", link: "/guide/introduction" },
+      { text: "Components", link: "/guide/virtual-list" },
     ],
 
     sidebar: {
       "/guide/": [
         {
-          text: "Getting Started",
+          text: "Guide",
           items: [
             { text: "introduction", link: "/guide/introduction" },
             { text: "quick-start", link: "/guide/quick-start" },
