@@ -9,15 +9,15 @@ import type { Plugin } from "../plugins/Plugin";
 
 export class Virtualizer {
   #count: number;
-  #overscan: number;
+  readonly #overscan: number;
   #plugins: Plugin[];
-  #onChange?: (state: VirtualizerState) => void;
+  readonly #onChange?: (state: VirtualizerState) => void;
 
-  #layoutStrategy: LayoutStrategy;
-  #scrollSource: ScrollSource;
+  readonly #layoutStrategy: LayoutStrategy;
+  readonly #scrollSource: ScrollSource;
 
   #state: VirtualizerState;
-  #unsubscribe?: () => void;
+  readonly #unsubscribe?: () => void;
 
   constructor(
     layoutStrategy: LayoutStrategy,
