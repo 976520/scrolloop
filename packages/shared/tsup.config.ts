@@ -10,10 +10,15 @@ export default defineConfig({
   minify: "terser",
   terserOptions: {
     compress: {
-      passes: 2,
+      passes: 3,
       drop_console: true,
       drop_debugger: true,
       pure_funcs: ["console.log", "console.debug"],
+      unsafe: true,
+      unsafe_arrows: true,
+      unsafe_methods: true,
+      booleans_as_integers: true,
+      ecma: 2020,
     },
     mangle: {
       safari10: false,
