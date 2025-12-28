@@ -80,11 +80,8 @@ onUnmounted(() => {
       </h1>
 
       <p class="hero-tagline animate-on-scroll fade-up delay-100">
-        <SlotMachine
-          :value="millionsCount"
-          class-name="counter-wrapper"
-        />+ of items.
-        <SlotMachine :value="kbCount" class-name="counter-wrapper" />KB
+        <SlotMachine :value="millionsCount" class-name="counter-wrapper" />+ of
+        items. <SlotMachine :value="kbCount" class-name="counter-wrapper" />KB
         of code.
         <span class="highlight">Zero lag.</span>
       </p>
@@ -95,7 +92,7 @@ onUnmounted(() => {
       </p>
 
       <div class="hero-actions animate-on-scroll fade-up delay-300">
-        <a href="/guide/quick-start" class="btn primary glow-on-hover">
+        <a href="guide/introduction.html" class="btn primary glow-on-hover">
           <span>Get Started</span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
