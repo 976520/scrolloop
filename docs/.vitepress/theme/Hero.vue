@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { withBase } from "vitepress";
 import SlotMachine from "./SlotMachine.vue";
 
 const millionsCount = ref(0);
@@ -92,7 +93,10 @@ onUnmounted(() => {
       </p>
 
       <div class="hero-actions animate-on-scroll fade-up delay-300">
-        <a href="guide/introduction.html" class="btn primary glow-on-hover">
+        <a
+          :href="withBase('/guide/introduction')"
+          class="btn primary glow-on-hover"
+        >
           <span>Get Started</span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
