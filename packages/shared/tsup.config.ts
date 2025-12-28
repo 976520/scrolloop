@@ -22,7 +22,7 @@ export default defineConfig({
       comments: false,
     },
   },
-  target: "es2024",
+  target: "es2020",
   external: ["react"],
   outExtension({ format }) {
     return {
