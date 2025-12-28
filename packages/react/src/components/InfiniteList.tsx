@@ -37,99 +37,63 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const initialPagesRef = useRef<Map<number, T[]>>(new Map());
-  const initialTotalRef = useRef(0);
-  const initialHasMoreRef = useRef(true);
-
-  if (isServerSide && initialData && initialData.length > 0) {
-    const initialPages = new Map<number, T[]>();
-    const totalPages = Math.ceil(initialData.length / pageSize);
-
-    for (let i = 0; i < totalPages; i++) {
-      const start = i * pageSize;
-      const end = start + pageSize;
-      initialPages.set(i, initialData.slice(start, end));
-    }
-
-    initialPagesRef.current = initialPages;
-    initialTotalRef.current = initialTotal ?? initialData.length;
-    initialHasMoreRef.current = initialTotal
-      ? initialData.length < initialTotal
-      : true;
-  }
+  const scrollTopRef = useRef(0);
 
   const { allItems, pages, loadingPages, hasMore, error, loadPage, retry } =
-    useInfinitePages({
-      fetchPage,
-      pageSize,
-      initialPage,
-      onPageLoad,
-      onError,
-    });
+    useInfinitePages({ fetchPage, pageSize, initialPage, onPageLoad, onError });
+
+  const ssrData = useMemo(() => {
+    if (!isServerSide || !initialData?.length) return null;
+    const initialPages = new Map<number, T[]>();
+    const totalPages = Math.ceil(initialData.length / pageSize);
+    for (let i = 0; i < totalPages; i++) {
+      initialPages.set(i, initialData.slice(i * pageSize, (i + 1) * pageSize));
+    }
+    const total = initialTotal ?? initialData.length;
+    return {
+      pages: initialPages,
+      total,
+      hasMore: initialTotal ? initialData.length < initialTotal : true,
+    };
+  }, [isServerSide, initialData, initialTotal, pageSize]);
 
   const mergedPages = useMemo(() => {
-    if (isServerSide && initialPagesRef.current.size > 0) {
+    if (ssrData) {
       const merged = new Map(pages);
-      initialPagesRef.current.forEach((items, pageNum) => {
-        if (!merged.has(pageNum)) {
-          merged.set(pageNum, items);
-        }
-      });
+      ssrData.pages.forEach((v, k) => !merged.has(k) && merged.set(k, v));
       return merged;
     }
     return pages;
-  }, [pages, isServerSide]);
+  }, [pages, ssrData]);
 
-  const mergedTotal = useMemo(() => {
-    if (isServerSide && initialTotalRef.current > 0) {
-      return Math.max(initialTotalRef.current, allItems.length);
-    }
-    return allItems.length;
-  }, [isServerSide, allItems.length]);
-
-  const mergedHasMore = useMemo(() => {
-    if (isServerSide && initialPagesRef.current.size > 0) {
-      return initialHasMoreRef.current || hasMore;
-    }
-    return hasMore;
-  }, [isServerSide, hasMore]);
+  const mergedTotal = ssrData
+    ? Math.max(ssrData.total, allItems.length)
+    : allItems.length;
+  const mergedHasMore = ssrData ? ssrData.hasMore || hasMore : hasMore;
 
   const mergedAllItems = useMemo(() => {
-    if (isServerSide && initialData && initialData.length > 0) {
-      const items: (T | undefined)[] = new Array(mergedTotal);
-
-      initialData.forEach((item, index) => {
-        items[index] = item;
+    if (ssrData && initialData) {
+      const items = new Array(mergedTotal);
+      initialData.forEach((v, i) => (items[i] = v));
+      mergedPages.forEach((v, k) => {
+        const start = k * pageSize;
+        v.forEach((it, i) => (items[start + i] = it));
       });
-
-      mergedPages.forEach((pageItems, pageNum) => {
-        const startIndex = pageNum * pageSize;
-        pageItems.forEach((item, i) => {
-          items[startIndex + i] = item;
-        });
-      });
-
       return items;
     }
     return allItems;
-  }, [isServerSide, initialData, mergedTotal, mergedPages, pageSize, allItems]);
+  }, [ssrData, initialData, mergedTotal, mergedPages, pageSize, allItems]);
 
   useEffect(() => {
-    if (!isServerSide && mergedPages.size === 0 && !error) {
-      const totalNeededItems = Math.ceil(height / itemSize) + overscan * 2;
-      for (
-        let page = 0;
-        page < Math.ceil(totalNeededItems / pageSize) + prefetchThreshold;
-        page++
-      )
-        loadPage(page);
+    if (!isServerSide && !mergedPages.size && !error) {
+      const needed = Math.ceil(height / itemSize) + overscan * 2;
+      for (let p = 0; p < Math.ceil(needed / pageSize) + prefetchThreshold; p++)
+        loadPage(p);
     }
   }, [
     isServerSide,
     mergedPages.size,
     loadPage,
-    initialPage,
     error,
     height,
     itemSize,
@@ -138,23 +102,21 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     overscan,
   ]);
 
-  const scrollTopRef = useRef(0);
   const visibleRange = useMemo(() => {
-    const scrollTop = scrollTopRef.current;
+    const st = scrollTopRef.current;
     const { renderStart, renderEnd } = calculateVirtualRange(
-      scrollTop,
+      st,
       height,
       itemSize,
       mergedAllItems.length,
       overscan,
-      scrollTop
+      st
     );
     return { start: renderStart, end: renderEnd };
   }, [height, itemSize, mergedAllItems.length, overscan]);
 
-  const shouldUseTransition = isServerSide;
   const { isVirtualized } = useTransition({
-    enabled: shouldUseTransition,
+    enabled: isServerSide,
     containerRef,
     itemSize,
     totalItems: mergedAllItems.length,
@@ -168,22 +130,16 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
         scrollTopRef.current = containerRef.current?.scrollTop ?? 0;
         return;
       }
-
-      const prefetchStart = Math.max(
+      const ps = Math.max(
         0,
-        Math.floor(range.startIndex / pageSize) -
-          Math.floor(range.endIndex / pageSize)
+        ((range.startIndex / pageSize) | 0) - ((range.endIndex / pageSize) | 0)
       );
-      const prefetchEnd =
-        Math.floor(range.endIndex / pageSize) +
+      const pe =
+        ((range.endIndex / pageSize) | 0) +
         prefetchThreshold +
         Math.ceil(overscan / pageSize);
-
-      findMissingPages(prefetchStart, prefetchEnd, mergedPages, loadingPages);
-
-      for (let page = prefetchStart; page <= prefetchEnd; page++) {
-        loadPage(page);
-      }
+      findMissingPages(ps, pe, mergedPages, loadingPages);
+      for (let p = ps; p <= pe; p++) loadPage(p);
     },
     [
       isServerSide,
@@ -199,96 +155,33 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
 
   useEffect(() => {
     if (!isServerSide || !containerRef.current) return;
-
-    const container = containerRef.current;
-    const handleScroll = () => {
-      scrollTopRef.current = container.scrollTop;
+    const scroll = () => {
+      scrollTopRef.current = containerRef.current?.scrollTop ?? 0;
     };
-
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
+    containerRef.current.addEventListener("scroll", scroll, { passive: true });
+    return () => containerRef.current?.removeEventListener("scroll", scroll);
   }, [isServerSide]);
 
-  const virtualListRenderItem = useCallback(
-    (index: number, itemStyle: CSSProperties) => {
-      const item = mergedAllItems[index];
-      return renderItem(item, index, itemStyle);
-    },
-    [mergedAllItems, renderItem]
-  );
+  const commonContainerStyle: CSSProperties = {
+    height,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+  const heightOnlyStyle: CSSProperties = { height };
 
-  const FullRenderItem = useCallback(
-    (item: T | undefined, index: number, style: CSSProperties) => {
-      return renderItem(item, index, style);
-    },
-    [renderItem]
-  );
-
-  const errorContainerStyle = useMemo<CSSProperties>(
-    () => ({
-      height,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }),
-    [height]
-  );
-
-  const errorContentStyle = useMemo<CSSProperties>(
-    () => ({
-      textAlign: "center",
-    }),
-    []
-  );
-
-  const errorMessageStyle = useMemo<CSSProperties>(
-    () => ({
-      color: "#666",
-      fontSize: "0.9em",
-    }),
-    []
-  );
-
-  const retryButtonStyle = useMemo<CSSProperties>(
-    () => ({
-      marginTop: 8,
-      padding: "4px 12px",
-      cursor: "pointer",
-    }),
-    []
-  );
-
-  const loadingContainerStyle = useMemo<CSSProperties>(
-    () => ({
-      height,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }),
-    [height]
-  );
-
-  const emptyContainerStyle = useMemo<CSSProperties>(
-    () => ({
-      height,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }),
-    [height]
-  );
-
-  const heightOnlyStyle = useMemo<CSSProperties>(() => ({ height }), [height]);
-
-  if (error && mergedAllItems.length === 0) {
+  if (error && !mergedAllItems.length) {
     if (renderError)
       return <div style={heightOnlyStyle}>{renderError(error, retry)}</div>;
     return (
-      <div style={errorContainerStyle}>
-        <div style={errorContentStyle}>
+      <div style={commonContainerStyle}>
+        <div style={{ textAlign: "center" }}>
           <p>Error.</p>
-          <p style={errorMessageStyle}>{error.message}</p>
-          <button onClick={retry} style={retryButtonStyle}>
+          <p style={{ color: "#666", fontSize: "0.9em" }}>{error.message}</p>
+          <button
+            onClick={retry}
+            style={{ marginTop: 8, padding: "4px 12px", cursor: "pointer" }}
+          >
             Retry
           </button>
         </div>
@@ -296,37 +189,32 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
     );
   }
 
-  if (mergedAllItems.length === 0 && loadingPages.size > 0) {
-    if (renderLoading) {
-      return <div style={heightOnlyStyle}>{renderLoading()}</div>;
-    }
-    return (
-      <div style={loadingContainerStyle}>
+  if (!mergedAllItems.length && loadingPages.size) {
+    return renderLoading ? (
+      <div style={heightOnlyStyle}>{renderLoading()}</div>
+    ) : (
+      <div style={commonContainerStyle}>
         <p>Loading...</p>
       </div>
     );
   }
 
-  if (mergedAllItems.length === 0 && !mergedHasMore) {
-    if (renderEmpty) {
-      return <div style={heightOnlyStyle}>{renderEmpty()}</div>;
-    }
-    return (
-      <div style={emptyContainerStyle}>
+  if (!mergedAllItems.length && !mergedHasMore) {
+    return renderEmpty ? (
+      <div style={heightOnlyStyle}>{renderEmpty()}</div>
+    ) : (
+      <div style={commonContainerStyle}>
         <p>No data.</p>
       </div>
     );
   }
 
-  const shouldRenderFullList =
-    isServerSideEnvironment() || (isServerSide && !isVirtualized);
-
-  if (shouldRenderFullList) {
+  if (isServerSideEnvironment() || (isServerSide && !isVirtualized)) {
     return (
       <FullList
         ref={containerRef}
         items={mergedAllItems}
-        renderItem={FullRenderItem}
+        renderItem={renderItem}
         itemSize={itemSize}
         height={height}
         className={className}
@@ -345,7 +233,9 @@ function InfiniteListInner<T>(props: InfiniteListProps<T>) {
       className={className}
       style={style}
       onRangeChange={handleRangeChange}
-      renderItem={virtualListRenderItem}
+      renderItem={(index, itemStyle) =>
+        renderItem(mergedAllItems[index], index, itemStyle)
+      }
     />
   );
 }

@@ -7,102 +7,65 @@ export const defaultTransitionStrategy: TransitionStrategy = {
   chunkSize: 10,
 };
 
+const RIC = (cb: () => void) =>
+  typeof window !== "undefined" && "requestIdleCallback" in window
+    ? window.requestIdleCallback(cb)
+    : setTimeout(cb, 1);
+const CIC = (id: any) =>
+  typeof window !== "undefined" && "cancelIdleCallback" in window
+    ? window.cancelIdleCallback(id)
+    : clearTimeout(id);
+
 export function pruneOffscreenDOMIdle(
   container: HTMLElement,
-  visibleRange: { start: number; end: number },
-  onPrune: (index: number) => void
-): () => void {
-  let cancelled = false;
-  let requestId: ReturnType<typeof requestIdleCallback> | null = null;
-
-  const pruneChunk = () => {
+  range: { start: number; end: number },
+  onPrune: (idx: number) => void
+) {
+  let id: any,
+    cancelled = false;
+  const prune = () => {
     if (cancelled) return;
-
-    const items = container.querySelectorAll("[data-item-index]");
-    let pruned = 0;
-    const maxPrunePerFrame = 5;
-
-    for (const item of items) {
-      if (pruned >= maxPrunePerFrame) break;
-
-      const index = parseInt(item.getAttribute("data-item-index") || "-1", 10);
-      if (index < 0) continue;
-
-      if (index < visibleRange.start || index > visibleRange.end) {
-        onPrune(index);
-        pruned++;
-      }
-    }
-
-    if (pruned > 0 && !cancelled) {
-      requestId = requestIdleCallback(pruneChunk);
-    }
+    let count = 0;
+    container.querySelectorAll("[data-item-index]").forEach((el) => {
+      if (count++ > 5) return;
+      const i = parseInt(el.getAttribute("data-item-index") || "-1", 10);
+      if (i >= 0 && (i < range.start || i > range.end)) onPrune(i);
+    });
+    if (count > 0 && !cancelled) id = RIC(prune);
   };
-
-  requestId = requestIdleCallback(pruneChunk);
-
+  id = RIC(prune);
   return () => {
     cancelled = true;
-    if (requestId !== null) {
-      cancelIdleCallback(requestId);
-    }
+    CIC(id);
   };
 }
 
 export function pruneOffscreenDOMChunk(
   container: HTMLElement,
-  visibleRange: { start: number; end: number },
-  chunkSize: number,
-  onPrune: (index: number) => void
-): () => void {
-  let cancelled = false;
-  let timeoutId: number | null = null;
-
-  const pruneChunk = () => {
+  range: { start: number; end: number },
+  chunk: number,
+  onPrune: (idx: number) => void
+) {
+  let id: any,
+    cancelled = false;
+  const prune = () => {
     if (cancelled) return;
-
-    const items = Array.from(container.querySelectorAll("[data-item-index]"));
-    const offscreenItems = items.filter((item) => {
-      const index = parseInt(item.getAttribute("data-item-index") || "-1", 10);
-      return (
-        index >= 0 && (index < visibleRange.start || index > visibleRange.end)
-      );
-    });
-
-    const chunk = offscreenItems.slice(0, chunkSize);
-    chunk.forEach((item) => {
-      const index = parseInt(item.getAttribute("data-item-index") || "-1", 10);
-      if (index >= 0) {
-        onPrune(index);
+    const items = [...container.querySelectorAll("[data-item-index]")].filter(
+      (el) => {
+        const i = parseInt(el.getAttribute("data-item-index") || "-1", 10);
+        return i >= 0 && (i < range.start || i > range.end);
       }
-    });
-
-    if (offscreenItems.length > chunkSize && !cancelled) {
-      timeoutId = window.setTimeout(pruneChunk, 16) as unknown as number;
-    }
+    );
+    items
+      .slice(0, chunk)
+      .forEach((el) =>
+        onPrune(parseInt(el.getAttribute("data-item-index")!, 10))
+      );
+    if (items.length > chunk && !cancelled) id = setTimeout(prune, 16);
   };
-
-  timeoutId = window.setTimeout(pruneChunk, 16) as unknown as number;
-
+  id = setTimeout(prune, 16);
   return () => {
     cancelled = true;
-    if (timeoutId !== null) {
-      window.clearTimeout(timeoutId as any);
-    }
+    clearTimeout(id);
   };
-}
-
-function requestIdleCallback(callback: () => void): number {
-  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-    return (window as any).requestIdleCallback(callback) as number;
-  }
-  return setTimeout(callback, 1) as unknown as number;
-}
-
-function cancelIdleCallback(id: number): void {
-  if (typeof window !== "undefined" && "cancelIdleCallback" in window) {
-    (window as any).cancelIdleCallback(id);
-  } else {
-    clearTimeout(id as any);
-  }
 }
