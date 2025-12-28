@@ -3,7 +3,7 @@ import type { LayoutStrategy } from "./LayoutStrategy";
 import { clamp } from "../../utils/clamp";
 
 export class FixedLayoutStrategy implements LayoutStrategy {
-  #itemSize: number;
+  readonly #itemSize: number;
 
   constructor(itemSize: number) {
     this.#itemSize = itemSize;
