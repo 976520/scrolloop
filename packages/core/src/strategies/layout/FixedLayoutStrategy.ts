@@ -26,11 +26,7 @@ export class FixedLayoutStrategy implements LayoutStrategy {
     viewportSize: number,
     count: number
   ): Range {
-    const startIndex = clamp(
-      0,
-      Math.floor(scrollOffset / this.#itemSize),
-      count - 1
-    );
+    const startIndex = clamp(0, (scrollOffset / this.#itemSize) | 0, count - 1);
 
     const visibleCount = Math.ceil(viewportSize / this.#itemSize);
     const endIndex = Math.min(count - 1, startIndex + visibleCount);
