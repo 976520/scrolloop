@@ -19,6 +19,9 @@ export class Virtualizer {
   #state: VirtualizerState;
   readonly #unsubscribe?: () => void;
 
+  #prevRenderRange?: { startIndex: number; endIndex: number };
+  #prevVirtualItems?: VirtualItem[];
+
   constructor(
     layoutStrategy: LayoutStrategy,
     scrollSource: ScrollSource,
@@ -43,6 +46,8 @@ export class Virtualizer {
   addPlugin(plugin: Plugin): void {
     this.#plugins.push(plugin);
     plugin.onInit?.();
+    this.#prevRenderRange = undefined;
+    this.#prevVirtualItems = undefined;
   }
 
   getState(): VirtualizerState {
@@ -52,6 +57,8 @@ export class Virtualizer {
   setCount(count: number): void {
     if (this.#count !== count) {
       this.#count = count;
+      this.#prevRenderRange = undefined;
+      this.#prevVirtualItems = undefined;
       this.update();
     }
   }
@@ -84,12 +91,13 @@ export class Virtualizer {
     );
 
     let renderRange = {
-      startIndex: Math.max(0, visibleRange.startIndex - this.#overscan),
-      endIndex: Math.min(
-        this.#count - 1,
-        visibleRange.endIndex + this.#overscan
-      ),
+      startIndex: (visibleRange.startIndex - this.#overscan) | 0,
+      endIndex: (visibleRange.endIndex + this.#overscan) | 0,
     };
+
+    if (renderRange.startIndex < 0) renderRange.startIndex = 0;
+    if (renderRange.endIndex > this.#count - 1)
+      renderRange.endIndex = this.#count - 1;
 
     for (const plugin of this.#plugins) {
       if (plugin.onRangeCalculated) {
@@ -97,16 +105,32 @@ export class Virtualizer {
       }
     }
 
-    const virtualItems: VirtualItem[] = [];
-    for (let i = renderRange.startIndex; i <= renderRange.endIndex; i++) {
-      const start = this.#layoutStrategy.getItemOffset(i);
-      const size = this.#layoutStrategy.getItemSize(i);
-      virtualItems.push({
-        index: i,
-        start,
-        size,
-        end: start + size,
-      });
+    let virtualItems: VirtualItem[];
+    if (
+      this.#prevRenderRange &&
+      this.#prevVirtualItems &&
+      this.#prevRenderRange.startIndex === renderRange.startIndex &&
+      this.#prevRenderRange.endIndex === renderRange.endIndex
+    ) {
+      virtualItems = this.#prevVirtualItems;
+    } else {
+      virtualItems = [];
+      const startIdx = renderRange.startIndex;
+      const endIdx = renderRange.endIndex;
+
+      for (let i = startIdx; i <= endIdx; i++) {
+        const start = this.#layoutStrategy.getItemOffset(i);
+        const size = this.#layoutStrategy.getItemSize(i);
+        virtualItems.push({
+          index: i,
+          start,
+          size,
+          end: start + size,
+        });
+      }
+
+      this.#prevRenderRange = renderRange;
+      this.#prevVirtualItems = virtualItems;
     }
 
     return {
