@@ -22,9 +22,8 @@ export default defineConfig({
       comments: false,
     },
   },
-  target: "es2024",
-  external: ["react", "react-native"],
-  noExternal: ["@scrolloop/core", "@scrolloop/shared"],
+  target: "es2020",
+  external: ["react", "react-native", "@scrolloop/core", "@scrolloop/shared"],
   outExtension({ format }) {
     return {
       js: format === "esm" ? ".mjs" : ".cjs",

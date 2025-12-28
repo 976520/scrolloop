@@ -23,8 +23,7 @@ export default defineConfig({
     },
   },
   target: "es2020",
-  external: ["react", "react-dom"],
-  noExternal: ["@scrolloop/core", "@scrolloop/shared"],
+  external: ["react", "react-dom", "@scrolloop/core", "@scrolloop/shared"],
   outExtension({ format }) {
     return {
       js: format === "esm" ? ".mjs" : ".cjs",
