@@ -1,20 +1,24 @@
-import type { Range } from '../../types';
-import type { LayoutStrategy } from './LayoutStrategy';
-import { clamp } from '../../utils/clamp';
+import type { Range } from "../../types";
+import type { LayoutStrategy } from "./LayoutStrategy";
+import { clamp } from "../../utils/clamp";
 
 export class FixedLayoutStrategy implements LayoutStrategy {
-  constructor(private itemSize: number) {}
+  #itemSize: number;
+
+  constructor(itemSize: number) {
+    this.#itemSize = itemSize;
+  }
 
   getItemOffset(index: number): number {
-    return index * this.itemSize;
+    return index * this.#itemSize;
   }
 
   getItemSize(_index: number): number {
-    return this.itemSize;
+    return this.#itemSize;
   }
 
   getTotalSize(count: number): number {
-    return count * this.itemSize;
+    return count * this.#itemSize;
   }
 
   getVisibleRange(
@@ -24,14 +28,13 @@ export class FixedLayoutStrategy implements LayoutStrategy {
   ): Range {
     const startIndex = clamp(
       0,
-      Math.floor(scrollOffset / this.itemSize),
+      Math.floor(scrollOffset / this.#itemSize),
       count - 1
     );
 
-    const visibleCount = Math.ceil(viewportSize / this.itemSize);
+    const visibleCount = Math.ceil(viewportSize / this.#itemSize);
     const endIndex = Math.min(count - 1, startIndex + visibleCount);
 
     return { startIndex, endIndex };
   }
 }
-
