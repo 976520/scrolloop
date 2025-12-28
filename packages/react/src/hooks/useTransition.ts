@@ -31,108 +31,78 @@ export function useTransition({
   onTransitionError,
 }: useTransitionOptions) {
   const [state, setState] = useState<TransitionState>({ type: "SSR_DOM" });
-  const isHydratedRef = useRef(false);
-  const hasInteractedRef = useRef(false);
-  const pruneCancelRef = useRef<(() => void) | null>(null);
-  const transitionStrategy = { ...defaultTransitionStrategy, ...strategy };
+  const isH = useRef(false);
+  const hasI = useRef(false);
+  const pC = useRef<(() => void) | null>(null);
+  const s = { ...defaultTransitionStrategy, ...strategy };
 
   useEffect(() => {
-    if (!enabled || isHydratedRef.current) return;
-
-    const checkHydration = () => {
-      if (containerRef.current && !isHydratedRef.current) {
-        isHydratedRef.current = true;
+    if (!enabled || isH.current) return;
+    const h = () => {
+      if (containerRef.current && !isH.current) {
+        isH.current = true;
         setState({ type: "HYDRATED" });
       }
     };
-
-    checkHydration();
-
-    const timeoutId = setTimeout(checkHydration, 0);
-
-    return () => clearTimeout(timeoutId);
+    h();
+    const t = setTimeout(h, 0);
+    return () => clearTimeout(t);
   }, [enabled, containerRef]);
 
   useEffect(() => {
     if (!enabled || state.type !== "HYDRATED") return;
+    const c = containerRef.current;
+    if (!c) return;
 
-    const container = containerRef.current;
-    if (!container) return;
-
-    const triggerTransition = () => {
+    const run = () => {
       try {
         onTransitionStart?.();
-
-        const snapshot = captureSnapshot(container, itemSize, totalItems);
-
-        setState({ type: "SWITCHING", snapshot });
-
-        restoreSnapshot(container, snapshot);
-
-        const pruneStrategy = transitionStrategy.pruneStrategy || "idle";
-        const cancelPrune =
-          pruneStrategy === "chunk"
+        const sn = captureSnapshot(c, itemSize, totalItems);
+        setState({ type: "SWITCHING", snapshot: sn });
+        restoreSnapshot(c, sn);
+        pC.current =
+          s.pruneStrategy === "chunk"
             ? pruneOffscreenDOMChunk(
-                container,
+                c,
                 visibleRange,
-                transitionStrategy.chunkSize || 10,
+                s.chunkSize || 10,
                 () => {}
               )
-            : pruneOffscreenDOMIdle(container, visibleRange, () => {});
-
-        pruneCancelRef.current = cancelPrune;
-
+            : pruneOffscreenDOMIdle(c, visibleRange, () => {});
         setTimeout(() => {
           setState({ type: "VIRTUALIZED" });
           onTransitionComplete?.();
         }, 100);
-      } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        onTransitionError?.(err);
-
-        if (transitionStrategy.transitionStrategy === "replace-offscreen") {
+      } catch (e) {
+        onTransitionError?.(e instanceof Error ? e : new Error(String(e)));
+        if (s.transitionStrategy === "replace-offscreen")
           setState({ type: "VIRTUALIZED" });
-        }
       }
     };
 
-    if (transitionStrategy.switchTrigger === "immediate") {
-      triggerTransition();
-    } else if (transitionStrategy.switchTrigger === "first-interaction") {
-      const handleInteraction = () => {
-        if (!hasInteractedRef.current) {
-          hasInteractedRef.current = true;
-          triggerTransition();
-          container.removeEventListener("click", handleInteraction);
-          container.removeEventListener("keydown", handleInteraction);
-          container.removeEventListener("scroll", handleInteraction);
+    if (s.switchTrigger === "immediate") run();
+    else if (s.switchTrigger === "first-interaction") {
+      const i = () => {
+        if (!hasI.current) {
+          hasI.current = true;
+          run();
+          ["click", "keydown", "scroll"].forEach((ev) =>
+            c.removeEventListener(ev, i)
+          );
         }
       };
-
-      container.addEventListener("click", handleInteraction, { once: true });
-      container.addEventListener("keydown", handleInteraction, { once: true });
-      container.addEventListener("scroll", handleInteraction, { once: true });
-
-      return () => {
-        container.removeEventListener("click", handleInteraction);
-        container.removeEventListener("keydown", handleInteraction);
-        container.removeEventListener("scroll", handleInteraction);
-      };
-    } else if (transitionStrategy.switchTrigger === "idle") {
-      const handleIdle = () => {
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(() => {
-            triggerTransition();
-          });
-        } else {
-          setTimeout(triggerTransition, 1000);
-        }
-      };
-
-      handleIdle();
-      return;
+      ["click", "keydown", "scroll"].forEach((ev) =>
+        c.addEventListener(ev, i, { once: true })
+      );
+      return () =>
+        ["click", "keydown", "scroll"].forEach((ev) =>
+          c.removeEventListener(ev, i)
+        );
+    } else if (s.switchTrigger === "idle") {
+      "requestIdleCallback" in window
+        ? window.requestIdleCallback(run)
+        : setTimeout(run, 1000);
     }
-
     return undefined;
   }, [
     enabled,
@@ -141,26 +111,18 @@ export function useTransition({
     itemSize,
     totalItems,
     visibleRange,
-    transitionStrategy,
+    s,
     onTransitionStart,
     onTransitionComplete,
     onTransitionError,
   ]);
 
-  useEffect(() => {
-    return () => {
-      if (pruneCancelRef.current) pruneCancelRef.current();
-    };
-  }, []);
-
-  const isVirtualized = state.type === "VIRTUALIZED";
-  const isSwitching = state.type === "SWITCHING";
-  const snapshot = state.type === "SWITCHING" ? state.snapshot : null;
+  useEffect(() => () => pC.current?.(), []);
 
   return {
     state,
-    isVirtualized,
-    isSwitching,
-    snapshot,
+    isVirtualized: state.type === "VIRTUALIZED",
+    isSwitching: state.type === "SWITCHING",
+    snapshot: state.type === "SWITCHING" ? state.snapshot : null,
   };
 }
