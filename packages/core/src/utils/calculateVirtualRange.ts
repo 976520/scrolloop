@@ -8,7 +8,7 @@ export function calculateVirtualRange(
   overscan: number,
   prevScrollOffset?: number
 ): VirtualRange {
-  const startIndex = Math.max(0, Math.floor(scrollOffset / itemSize));
+  const startIndex = Math.max(0, (scrollOffset / itemSize) | 0);
   const endIndex = Math.min(
     totalCount - 1,
     startIndex + Math.ceil(viewportSize / itemSize)
@@ -22,7 +22,7 @@ export function calculateVirtualRange(
   const overscanStart = isScrollingUp ? overscan * 1.5 : overscan;
   const overscanEnd = isScrollingDown ? overscan * 1.5 : overscan;
 
-  const renderStart = Math.max(0, Math.floor(startIndex - overscanStart));
+  const renderStart = Math.max(0, (startIndex - overscanStart) | 0);
   const renderEnd = Math.min(totalCount - 1, Math.ceil(endIndex + overscanEnd));
 
   return {
