@@ -1,40 +1,40 @@
 import type { ScrollSource } from "./ScrollSource";
 
 export class VirtualScrollSource implements ScrollSource {
-  private scrollOffset = 0;
-  private viewportSize = 0;
-  private listeners = new Set<(offset: number) => void>();
+  #scrollOffset = 0;
+  #viewportSize = 0;
+  #listeners = new Set<(offset: number) => void>();
 
   getScrollOffset(): number {
-    return this.scrollOffset;
+    return this.#scrollOffset;
   }
 
   getViewportSize(): number {
-    return this.viewportSize;
+    return this.#viewportSize;
   }
 
   setScrollOffset(offset: number): void {
-    if (this.scrollOffset !== offset) {
-      this.scrollOffset = offset;
-      this.notifyListeners();
+    if (this.#scrollOffset !== offset) {
+      this.#scrollOffset = offset;
+      this.#notifyListeners();
     }
   }
 
   setViewportSize(size: number): void {
-    if (this.viewportSize !== size) {
-      this.viewportSize = size;
-      this.notifyListeners();
+    if (this.#viewportSize !== size) {
+      this.#viewportSize = size;
+      this.#notifyListeners();
     }
   }
 
   subscribe(callback: (offset: number) => void): () => void {
-    this.listeners.add(callback);
+    this.#listeners.add(callback);
     return () => {
-      this.listeners.delete(callback);
+      this.#listeners.delete(callback);
     };
   }
 
-  private notifyListeners(): void {
-    this.listeners.forEach((listener) => listener(this.scrollOffset));
+  #notifyListeners(): void {
+    this.#listeners.forEach((listener) => listener(this.#scrollOffset));
   }
 }

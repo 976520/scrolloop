@@ -22,7 +22,7 @@ export default defineConfig({
       comments: false,
     },
   },
-  target: "es2020",
+  target: "es2022",
   outExtension({ format }) {
     return {
       js: format === "esm" ? ".mjs" : ".cjs",
