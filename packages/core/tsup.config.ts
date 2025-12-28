@@ -18,7 +18,7 @@ export default defineConfig({
       unsafe_arrows: true,
       unsafe_methods: true,
       booleans_as_integers: true,
-      ecma: 2020,
+      ecma: 2022,
     },
     mangle: {
       safari10: false,
