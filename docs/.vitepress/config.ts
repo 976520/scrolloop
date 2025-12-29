@@ -8,7 +8,7 @@ export default defineConfig({
   base: "/scrolloop/",
 
   head: [
-    ["link", { rel: "icon", href: "/favicon.ico" }],
+    ["link", { rel: "icon", href: "/favicon.svg" }],
     ["meta", { name: "theme-color", content: "#7c3aed" }],
   ],
 

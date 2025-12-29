@@ -37,11 +37,11 @@ const animateCountUp = (targetValue, duration, callback) => {
 };
 
 const startInitialAnimation = () => {
-  animateCountUp(42, 1500, (value) => {
+  animateCountUp(36, 2500, (value) => {
     kbCount.value = value;
   });
 
-  animateCountUp(1048596, 2500, (value) => {
+  animateCountUp(1048596, 3500, (value) => {
     millionsCount.value = value;
     if (value >= 1048596) {
       if (!incrementStarted.value) {
