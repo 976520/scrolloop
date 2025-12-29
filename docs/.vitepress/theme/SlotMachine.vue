@@ -1,18 +1,23 @@
 <template>
-  <span :class="`inline-flex items-baseline ${className}`">
+  <span :class="`inline-flex items-center ${className}`">
     <span
       v-for="(anims, index) in digitAnimations"
       :key="index"
       class="digit-container"
     >
       <span
-        v-for="anim in anims"
-        :key="anim.id"
-        class="digit-item"
-        :class="getAnimationClass(anim)"
-        :style="{ animationDuration: `${anim.speed}s` }"
+        class="digit-strip"
+        :key="anims.map(a => a.id).join('-')"
+        :class="getStripClass(anims)"
+        :style="getStripStyle(anims)"
       >
-        {{ anim.digit }}
+        <span
+          v-for="anim in anims"
+          :key="anim.id"
+          class="digit-item"
+        >
+          {{ anim.digit }}
+        </span>
       </span>
     </span>
   </span>
@@ -42,14 +47,22 @@ const digitAnimations = ref<DigitAnimation[][]>([]);
 const prevValue = ref(props.value);
 const lastChangeTime = ref(Date.now());
 const animationId = ref(0);
+const cleanupTimer = ref<any>(null);
+
 const audio = ref<HTMLAudioElement | null>(null);
 const audioMidpoint = ref(0);
 
-const getAnimationClass = (anim: DigitAnimation) => {
-  if (anim.isLeaving) {
-    return anim.direction === "up" ? "slot-leave-up" : "slot-leave-down";
-  }
-  return anim.direction === "up" ? "slot-enter-up" : "slot-enter-down";
+const getStripClass = (anims: DigitAnimation[]) => {
+  if (anims.length < 2) return "";
+  const entering = anims.find((a) => !a.isLeaving);
+  if (!entering) return "";
+  return entering.direction === "up" ? "strip-move-up" : "strip-move-down";
+};
+
+const getStripStyle = (anims: DigitAnimation[]) => {
+  const entering = anims.find((a) => !a.isLeaving);
+  if (!entering || anims.length < 2) return {};
+  return { animationDuration: `${entering.speed}s` };
 };
 
 onMounted(() => {
@@ -58,11 +71,9 @@ onMounted(() => {
   const audioElement = new Audio("/sound/main/t.mp3");
   audioElement.preload = "auto";
   audioElement.volume = 0.5;
-
   audioElement.addEventListener("loadedmetadata", () => {
     audioMidpoint.value = audioElement.duration / 21;
   });
-
   audio.value = audioElement;
 
   const digits = String(props.value).split("");
@@ -71,8 +82,8 @@ onMounted(() => {
       id: `${animationId.value++}`,
       digit,
       isLeaving: false,
-      direction: "up" as const,
-      speed: 0.3,
+      direction: "up",
+      speed: 0,
     },
   ]);
 });
@@ -82,6 +93,7 @@ onUnmounted(() => {
     audio.value.pause();
     audio.value = null;
   }
+  if (cleanupTimer.value) clearTimeout(cleanupTimer.value);
 });
 
 watch(
@@ -89,19 +101,27 @@ watch(
   (newValue, oldValue) => {
     if (oldValue === newValue) return;
 
+    if (cleanupTimer.value) {
+      clearTimeout(cleanupTimer.value);
+      cleanupTimer.value = null;
+    }
+    
+    digitAnimations.value = digitAnimations.value.map(group => {
+      const entering = group.find(a => !a.isLeaving);
+      return entering ? [entering] : group;
+    });
+
     const currentDigits = String(newValue).split("");
-    const previousDigits = String(prevValue.value).split("");
+    const previousDigits = digitAnimations.value.map(group => group[0]?.digit || "");
 
     const now = Date.now();
     const timeSinceLastChange = now - lastChangeTime.value;
-
     if (audio.value) {
       audio.value.currentTime = audioMidpoint.value;
       audio.value.play().catch(() => null);
     }
 
     const speed = Math.max(0.15, Math.min(0.4, timeSinceLastChange / 1000));
-
     const direction: "up" | "down" = newValue > prevValue.value ? "up" : "down";
     const maxLength = Math.max(currentDigits.length, previousDigits.length);
     const newAnimations: DigitAnimation[][] = [];
@@ -110,64 +130,48 @@ watch(
       const currentIndex = currentDigits.length - maxLength + i;
       const prevIndex = previousDigits.length - maxLength + i;
 
-      const actualCurrentDigit =
-        currentIndex >= 0 ? currentDigits[currentIndex] : undefined;
-      const actualPrevDigit =
-        prevIndex >= 0 ? previousDigits[prevIndex] : undefined;
+      const actualCurrentDigit = currentIndex >= 0 ? currentDigits[currentIndex] : undefined;
+      
+      const existingGroup = prevIndex >= 0 ? digitAnimations.value[prevIndex] : [];
+      const actualPrevDigitObj = existingGroup?.[0]; 
+      
+      const newAnimBase = {
+        id: `${animationId.value++}`,
+        isLeaving: false,
+        direction,
+        speed,
+      };
 
-      const existingAnims = digitAnimations.value[i] || [];
+      if (actualCurrentDigit !== undefined) {
+         if (actualPrevDigitObj && actualPrevDigitObj.digit !== actualCurrentDigit) {
+            const prevAsLeaving = { ...actualPrevDigitObj, isLeaving: true };
+            const newAsEntering = { ...newAnimBase, digit: actualCurrentDigit };
 
-      if (actualCurrentDigit !== actualPrevDigit) {
-        const leavingAnims = existingAnims
-          .filter(() => actualPrevDigit !== undefined)
-          .map((anim) => ({
-            ...anim,
-            isLeaving: true,
-          }));
-
-        if (actualCurrentDigit !== undefined) {
-          const newAnim: DigitAnimation = {
-            id: `${animationId.value++}`,
-            digit: actualCurrentDigit,
-            isLeaving: false,
-            direction,
-            speed,
-          };
-
-          newAnimations[i] = [...leavingAnims, newAnim];
-        } else {
-          newAnimations[i] = leavingAnims;
-        }
-      } else if (actualCurrentDigit !== undefined) {
-        if (existingAnims.length === 0) {
-          newAnimations[i] = [
-            {
-              id: `${animationId.value++}`,
-              digit: actualCurrentDigit,
-              isLeaving: false,
-              direction,
-              speed,
-            },
-          ];
-        } else {
-          newAnimations[i] = existingAnims;
-        }
+            if (direction === "up") {
+              newAnimations[i] = [prevAsLeaving, newAsEntering];
+            } else {
+              newAnimations[i] = [newAsEntering, prevAsLeaving];
+            }
+         } else if (actualPrevDigitObj) {
+            newAnimations[i] = [actualPrevDigitObj];
+         } else {
+            newAnimations[i] = [{ ...newAnimBase, digit: actualCurrentDigit }];
+         }
+      } else {
+        newAnimations[i] = [];
       }
     }
 
-    digitAnimations.value = currentDigits.map(
-      (_, index) =>
-        newAnimations[maxLength - currentDigits.length + index] || []
-    );
+    digitAnimations.value = newAnimations;
 
     lastChangeTime.value = now;
     prevValue.value = newValue;
 
-    setTimeout(() => {
+    cleanupTimer.value = setTimeout(() => {
       digitAnimations.value = digitAnimations.value.map((anims) =>
         anims.filter((anim) => !anim.isLeaving)
       );
-    }, 400);
+    }, speed * 1000 + 20);
   }
 );
 </script>
@@ -181,71 +185,49 @@ watch(
   overflow: hidden;
 }
 
-.digit-item {
+.digit-strip {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0);
+  will-change: transform;
+}
+
+.digit-item {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 0.75em;
+  flex-shrink: 0;
+  line-height: 1; 
 }
 
-.slot-enter-up {
-  animation: slotEnterUp ease-out forwards;
+.strip-move-up {
+  animation: stripMoveUp cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.slot-enter-down {
-  animation: slotEnterDown ease-out forwards;
+.strip-move-down {
+  animation: stripMoveDown cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.slot-leave-up {
-  animation: slotLeaveUp ease-out forwards;
-}
-
-.slot-leave-down {
-  animation: slotLeaveDown ease-out forwards;
-}
-
-@keyframes slotEnterUp {
+@keyframes stripMoveUp {
   from {
-    transform: translateY(100%);
-    opacity: 0;
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-0.75em);
+  }
+}
+
+@keyframes stripMoveDown {
+  from {
+    transform: translateY(-0.75em);
   }
   to {
     transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slotLeaveUp {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-}
-
-@keyframes slotEnterDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slotLeaveDown {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(100%);
-    opacity: 0;
   }
 }
 </style>

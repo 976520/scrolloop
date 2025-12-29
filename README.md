@@ -1,39 +1,53 @@
-<img width="300" alt="4f11d7e413d6546a60fddc0e02219658e360d58512bc11c1acc57530fab307de" src="https://github.com/user-attachments/assets/d35a27e7-7895-43e5-9b4f-ac29c403dd3e" />
+<img width="300" alt="scrolloop logo" src="https://github.com/user-attachments/assets/d35a27e7-7895-43e5-9b4f-ac29c403dd3e" />
 
-# scrolloop
+# [scrolloop](https://976520.github.io/scrolloop/)
 
-React 스크롤 컴포넌트 라이브러리
+The modern scrolling component for React and React Native
 
-Just a scrolling library for React
-
-![NPM Downloads](https://img.shields.io/npm/d18m/scrolloop)
+![NPM Downloads](https://img.shields.io/npm/dt/scrolloop)
 ![Repo size](https://img.shields.io/github/repo-size/976520/scrolloop)
 ![Last commit](https://img.shields.io/github/last-commit/976520/scrolloop?color=red)
-![Top language](https://img.shields.io/github/languages/top/976520/scrolloop)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
 ## Install
 
+### React
+
 ```bash
-npm install scrolloop
-yarn add scrolloop
-pnpm add scrolloop
+npm install @scrolloop/react
+# or
+yarn add @scrolloop/react
+# or
+pnpm add @scrolloop/react
 ```
 
-## Examples
+### React Native
 
-### VirtualList
+```bash
+npm install @scrolloop/react-native
+# or
+yarn add @scrolloop/react-native
+# or
+pnpm add @scrolloop/react-native
+```
+
+## Quick Start
+
+### React
 
 ```tsx
-const items = Array.from({ length: 10000 }, (_, i) => `Item ${i}`);
+import { VirtualList } from "@scrolloop/react";
 
-export default function App() {
+function App() {
+  const items = Array.from({ length: 1000 }, (_, i) => `Item #${i}`);
+
   return (
     <VirtualList
       count={items.length}
-      itemSize={40}
+      itemSize={50}
+      height={400}
       renderItem={(index, style) => (
-        <div style={style} key={index}>
+        <div key={index} style={style}>
           {items[index]}
         </div>
       )}
@@ -42,18 +56,21 @@ export default function App() {
 }
 ```
 
+### React Native
+
 ```tsx
 import { View, Text } from "react-native";
+import { VirtualList } from "@scrolloop/react-native";
 
-const items = Array.from({ length: 10000 }, (_, i) => `Item ${i}`);
+function App() {
+  const items = Array.from({ length: 1000 }, (_, i) => `Item #${i}`);
 
-export default function App() {
   return (
     <VirtualList
       count={items.length}
-      itemSize={40}
+      itemSize={50}
       renderItem={(index, style) => (
-        <View style={style} key={index}>
+        <View key={index} style={style}>
           <Text>{items[index]}</Text>
         </View>
       )}
@@ -62,91 +79,12 @@ export default function App() {
 }
 ```
 
-### InfiniteList
+## Packages
 
-```tsx
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+- **@scrolloop/core**: Platform-agnostic virtual scrolling logic
+- **@scrolloop/react**: React implementation
+- **@scrolloop/react-native**: React Native implementation
 
-export default function UserList() {
-  return (
-    <InfiniteList<User>
-      fetchPage={fetchFunction()}
-      pageSize={20}
-      itemSize={60}
-      height={800}
-      renderItem={(user, index, style) => (
-        <div
-          style={{
-            ...style,
-            padding: "8px 16px",
-            borderBottom: "1px solid #eee",
-          }}
-        >
-          <h3>{user.name}</h3>
-          <p>{user.email}</p>
-        </div>
-      )}
-      renderLoading={() => <div>로딩 중...</div>}
-      renderError={(error, retry) => (
-        <div>
-          <p>{error.message}</p>
-          <button onClick={retry}>재시도</button>
-        </div>
-      )}
-      renderEmpty={() => <div>데이터가 없습니다.</div>}
-    />
-  );
-}
-```
-
-```tsx
-import { View, Text, TouchableOpacity } from "react-native";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-export default function UserList() {
-  return (
-    <InfiniteList<User>
-      fetchPage={fetchFunction()}
-      pageSize={20}
-      itemSize={60}
-      height={800}
-      renderItem={(user, index, style) => (
-        <View
-          style={{
-            ...style,
-            padding: 8,
-            borderBottomWidth: 1,
-            borderBottomColor: "#eee",
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "bold" }}>{user.name}</Text>
-          <Text style={{ color: "#666" }}>{user.email}</Text>
-        </View>
-      )}
-      renderLoading={() => <Text>로딩 중...</Text>}
-      renderError={(error, retry) => (
-        <View>
-          <Text>{error.message}</Text>
-          <TouchableOpacity onPress={retry}>
-            <Text>재시도</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-      renderEmpty={() => <Text>데이터가 없습니다.</Text>}
-    />
-  );
-}
-```
-
-## license
+## License
 
 MIT
