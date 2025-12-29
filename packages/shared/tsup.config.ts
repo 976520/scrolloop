@@ -14,10 +14,10 @@ export default defineConfig({
       drop_console: true,
       drop_debugger: true,
       pure_funcs: ["console.log", "console.debug"],
-      unsafe: true,
-      unsafe_arrows: true,
+      unsafe: false,
+      unsafe_arrows: false,
       unsafe_methods: true,
-      booleans_as_integers: true,
+      booleans_as_integers: false,
       ecma: 2020,
     },
     mangle: {
