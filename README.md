@@ -4,7 +4,7 @@
 
 The modern scrolling component for React and React Native
 
-![NPM Downloads](https://img.shields.io/npm/dt/@scrolloop/react)
+![NPM Downloads](https://img.shields.io/npm/dt/scrolloop)
 ![Repo size](https://img.shields.io/github/repo-size/976520/scrolloop)
 ![Last commit](https://img.shields.io/github/last-commit/976520/scrolloop?color=red)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
