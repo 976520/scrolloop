@@ -185,17 +185,16 @@ describe("Virtualizer", () => {
 
     it("does not reuse cached items when the strategy is clamped", () => {
       let calls = 0;
-      const stubStrategy: import("../../strategies/layout/LayoutStrategy").LayoutStrategy =
-        {
-          getItemOffset: (i: number) => {
-            calls++;
-            return i * 50;
-          },
-          getItemSize: () => 50,
-          getTotalSize: () => 1000,
-          getVirtualSize: () => 100_000,
-          getVisibleRange: () => ({ startIndex: 0, endIndex: 2 }),
-        };
+      const stubStrategy: LayoutStrategy = {
+        getItemOffset: (i: number) => {
+          calls++;
+          return i * 50;
+        },
+        getItemSize: () => 50,
+        getTotalSize: () => 1000,
+        getVirtualSize: () => 100_000,
+        getVisibleRange: () => ({ startIndex: 0, endIndex: 2 }),
+      };
       const src = new VirtualScrollSource();
       src.setViewportSize(200);
       const v = new Virtualizer(stubStrategy, src, {

@@ -53,7 +53,6 @@ export class FixedLayoutStrategy implements LayoutStrategy {
   }
 
   #clampedTotalSize(virtualTotal: number): number {
-    const max = getMaxElementSize();
-    return virtualTotal > max ? max : virtualTotal;
+    return Math.min(virtualTotal, getMaxElementSize());
   }
 }

@@ -116,14 +116,15 @@ export class Virtualizer {
     );
 
     let virtualItems: VirtualItem[];
-    if (
+    // When clamped, item.start depends on scrollOffset, so a same-range hit isn't reusable.
+    const canReuseCache =
       !isClamped &&
       this.#prevRenderRange &&
       this.#prevVirtualItems &&
       this.#prevRenderRange.startIndex === renderRange.startIndex &&
-      this.#prevRenderRange.endIndex === renderRange.endIndex
-    ) {
-      virtualItems = this.#prevVirtualItems;
+      this.#prevRenderRange.endIndex === renderRange.endIndex;
+    if (canReuseCache) {
+      virtualItems = this.#prevVirtualItems!;
     } else {
       virtualItems = [];
       const startIdx = renderRange.startIndex;

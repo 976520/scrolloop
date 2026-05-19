@@ -1,7 +1,10 @@
+// Safe below every shipping browser's per-element height cap (Safari ~16M, Firefox ~17M, Chromium ~33M).
 const SSR_FALLBACK = 6_000_000;
 const PROBE_LOWER_BOUND = 1_000_000;
+// Above any known browser cap, so the binary search always converges from above.
 const PROBE_UPPER_BOUND = 40_000_000;
 const PROBE_RESOLUTION = 100_000;
+// Margin against sub-pixel rounding near the cap, where layout can silently clip the last few px.
 const SAFETY_FACTOR = 0.95;
 
 let cached: number | null = null;
