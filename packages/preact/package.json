@@ -1,0 +1,40 @@
+{
+  "name": "@scrolloop/preact",
+  "version": "0.1.0",
+  "description": "Preact adapter for @scrolloop/core",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "peerDependencies": {
+    "preact": ">=10.0.0"
+  },
+  "dependencies": {
+    "@scrolloop/core": "workspace:*",
+    "@scrolloop/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "preact": "^10.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT"
+}
