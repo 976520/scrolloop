@@ -2,6 +2,7 @@ import type { Range } from "../../types";
 import type { LayoutStrategy } from "./LayoutStrategy";
 import { clamp } from "../../utils/clamp";
 import { getMaxElementSize } from "../../utils/getMaxElementSize";
+import { mapToVirtualOffset } from "../../utils/mapToVirtualOffset";
 
 export class FixedLayoutStrategy implements LayoutStrategy {
   readonly #itemSize: number;
@@ -55,17 +56,4 @@ export class FixedLayoutStrategy implements LayoutStrategy {
     const max = getMaxElementSize();
     return virtualTotal > max ? max : virtualTotal;
   }
-}
-
-export function mapToVirtualOffset(
-  scrollOffset: number,
-  viewportSize: number,
-  virtualTotal: number,
-  clampedTotal: number
-): number {
-  if (virtualTotal <= clampedTotal) return scrollOffset;
-  const scrollable = clampedTotal - viewportSize;
-  if (scrollable <= 0) return 0;
-  const ratio = scrollOffset / scrollable;
-  return ratio * (virtualTotal - viewportSize);
 }

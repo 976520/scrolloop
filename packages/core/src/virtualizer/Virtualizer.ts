@@ -6,6 +6,7 @@ import type {
 import type { LayoutStrategy } from "../strategies/layout/LayoutStrategy";
 import type { ScrollSource } from "../strategies/scroll/ScrollSource";
 import type { Plugin } from "../plugins/Plugin";
+import { mapToVirtualOffset } from "../utils/mapToVirtualOffset";
 
 export class Virtualizer {
   #count: number;
@@ -107,13 +108,12 @@ export class Virtualizer {
       }
     }
 
-    let virtualOffset = scrollOffset;
-    if (isClamped) {
-      const scrollable = totalSize - viewportSize;
-      const virtualScrollable = virtualSize - viewportSize;
-      virtualOffset =
-        scrollable > 0 ? (scrollOffset * virtualScrollable) / scrollable : 0;
-    }
+    const virtualOffset = mapToVirtualOffset(
+      scrollOffset,
+      viewportSize,
+      virtualSize,
+      totalSize
+    );
 
     let virtualItems: VirtualItem[];
     if (
@@ -132,9 +132,7 @@ export class Virtualizer {
       for (let i = startIdx; i <= endIdx; i++) {
         const virtualStart = this.#layoutStrategy.getItemOffset(i);
         const size = this.#layoutStrategy.getItemSize(i);
-        const start = isClamped
-          ? scrollOffset + (virtualStart - virtualOffset)
-          : virtualStart;
+        const start = scrollOffset + (virtualStart - virtualOffset);
         virtualItems.push({
           index: i,
           start,
