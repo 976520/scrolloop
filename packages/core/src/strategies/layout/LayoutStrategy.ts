@@ -1,4 +1,4 @@
-import type { Range } from '../../types';
+import type { Range } from "../../types";
 
 export interface LayoutStrategy {
   getItemOffset(index: number): number;
@@ -7,10 +7,11 @@ export interface LayoutStrategy {
 
   getTotalSize(count: number): number;
 
+  getVirtualSize?(count: number): number;
+
   getVisibleRange(
     scrollOffset: number,
     viewportSize: number,
     count: number
   ): Range;
 }
-
