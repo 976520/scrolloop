@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf dist)",
+      "Bash(pnpm build *)",
+      "Read(//private/tmp/**)",
+      "Bash(npm pack *)",
+      "Bash(xargs -I{} tar -xOzf {} package/package.json)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('deps:', d.get\\('dependencies'\\)\\); print\\('peerDeps:', d.get\\('peerDependencies'\\)\\); print\\('version:', d['version']\\)\")",
+      "Bash(gh repo *)",
+      "Bash(gh api *)"
+    ]
+  }
+}
