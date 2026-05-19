@@ -75,4 +75,40 @@ describe("getMaxElementSize", () => {
       globalThis.document = originalDocument;
     }
   });
+
+  it("returns the fallback without throwing when document.body is null", () => {
+    const originalBody = document.body;
+    Object.defineProperty(document, "body", {
+      configurable: true,
+      get: () => null,
+    });
+    try {
+      const size = getMaxElementSize();
+      expect(size).toBeGreaterThan(0);
+      expect(Number.isFinite(size)).toBe(true);
+    } finally {
+      Object.defineProperty(document, "body", {
+        configurable: true,
+        value: originalBody,
+        writable: true,
+      });
+    }
+  });
+
+  it("re-probes once document.body becomes available", () => {
+    const originalBody = document.body;
+    Object.defineProperty(document, "body", {
+      configurable: true,
+      get: () => null,
+    });
+    const fallback = getMaxElementSize();
+    Object.defineProperty(document, "body", {
+      configurable: true,
+      value: originalBody,
+      writable: true,
+    });
+    const probed = getMaxElementSize();
+    expect(probed).not.toBe(fallback);
+    expect(probed).toBeGreaterThan(0);
+  });
 });

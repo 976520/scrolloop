@@ -8,7 +8,7 @@ let cached: number | null = null;
 
 export function getMaxElementSize(): number {
   if (cached !== null) return cached;
-  if (typeof document === "undefined") return SSR_FALLBACK;
+  if (typeof document === "undefined" || !document.body) return SSR_FALLBACK;
 
   const probe = document.createElement("div");
   probe.style.cssText =
