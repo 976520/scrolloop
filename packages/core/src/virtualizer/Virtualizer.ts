@@ -83,6 +83,9 @@ export class Virtualizer {
     const scrollOffset = this.#scrollSource.getScrollOffset();
     const viewportSize = this.#scrollSource.getViewportSize();
     const totalSize = this.#layoutStrategy.getTotalSize(this.#count);
+    const virtualSize =
+      this.#layoutStrategy.getVirtualSize?.(this.#count) ?? totalSize;
+    const isClamped = virtualSize > totalSize;
 
     let visibleRange = this.#layoutStrategy.getVisibleRange(
       scrollOffset,
@@ -104,8 +107,17 @@ export class Virtualizer {
       }
     }
 
+    let virtualOffset = scrollOffset;
+    if (isClamped) {
+      const scrollable = totalSize - viewportSize;
+      const virtualScrollable = virtualSize - viewportSize;
+      virtualOffset =
+        scrollable > 0 ? (scrollOffset * virtualScrollable) / scrollable : 0;
+    }
+
     let virtualItems: VirtualItem[];
     if (
+      !isClamped &&
       this.#prevRenderRange &&
       this.#prevVirtualItems &&
       this.#prevRenderRange.startIndex === renderRange.startIndex &&
@@ -118,8 +130,11 @@ export class Virtualizer {
       const endIdx = renderRange.endIndex;
 
       for (let i = startIdx; i <= endIdx; i++) {
-        const start = this.#layoutStrategy.getItemOffset(i);
+        const virtualStart = this.#layoutStrategy.getItemOffset(i);
         const size = this.#layoutStrategy.getItemSize(i);
+        const start = isClamped
+          ? scrollOffset + (virtualStart - virtualOffset)
+          : virtualStart;
         virtualItems.push({
           index: i,
           start,
