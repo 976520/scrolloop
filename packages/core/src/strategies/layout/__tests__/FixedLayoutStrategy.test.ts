@@ -2,42 +2,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { FixedLayoutStrategy } from "../FixedLayoutStrategy";
 import { resetMaxElementSizeCache } from "../../../utils/getMaxElementSize";
-
-function simulateBrowserCeiling(limit: number) {
-  HTMLElement.prototype.getBoundingClientRect = function () {
-    const declared = parseFloat(this.style.height || "0");
-    const clamped = Math.min(declared, limit);
-    return {
-      x: 0,
-      y: 0,
-      width: 1,
-      height: clamped,
-      top: 0,
-      left: 0,
-      right: 1,
-      bottom: clamped,
-      toJSON: () => ({}),
-    } as DOMRect;
-  };
-}
+import { installFakeBoundingRect } from "../../../test-utils/fakeBoundingRect";
 
 describe("FixedLayoutStrategy", () => {
   beforeEach(() => {
     resetMaxElementSizeCache();
-    HTMLElement.prototype.getBoundingClientRect = function () {
-      const declared = parseFloat(this.style.height || "0");
-      return {
-        x: 0,
-        y: 0,
-        width: 1,
-        height: declared,
-        top: 0,
-        left: 0,
-        right: 1,
-        bottom: declared,
-        toJSON: () => ({}),
-      } as DOMRect;
-    };
+    installFakeBoundingRect();
   });
 
   describe("below the browser ceiling", () => {
