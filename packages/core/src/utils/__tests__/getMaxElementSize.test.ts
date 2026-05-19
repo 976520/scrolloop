@@ -4,6 +4,7 @@ import {
   getMaxElementSize,
   resetMaxElementSizeCache,
 } from "../getMaxElementSize";
+import { installFakeBoundingRect } from "../../test-utils/fakeBoundingRect";
 
 describe("getMaxElementSize", () => {
   beforeEach(() => {
@@ -37,29 +38,13 @@ describe("getMaxElementSize", () => {
 
   it("converges below a simulated browser ceiling", () => {
     const SIMULATED_LIMIT = 17_000_000;
-    const originalGetRect = HTMLElement.prototype.getBoundingClientRect;
-    HTMLElement.prototype.getBoundingClientRect = function () {
-      const declared = parseFloat(this.style.height || "0");
-      const clamped = Math.min(declared, SIMULATED_LIMIT);
-      return {
-        x: 0,
-        y: 0,
-        width: 1,
-        height: clamped,
-        top: 0,
-        left: 0,
-        right: 1,
-        bottom: clamped,
-        toJSON: () => ({}),
-      } as DOMRect;
-    };
-
+    const restore = installFakeBoundingRect(SIMULATED_LIMIT);
     try {
       const size = getMaxElementSize();
       expect(size).toBeLessThanOrEqual(SIMULATED_LIMIT);
       expect(size).toBeGreaterThan(SIMULATED_LIMIT * 0.9);
     } finally {
-      HTMLElement.prototype.getBoundingClientRect = originalGetRect;
+      restore();
     }
   });
 

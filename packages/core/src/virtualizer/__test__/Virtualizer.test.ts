@@ -3,6 +3,7 @@ import { Virtualizer } from "../Virtualizer";
 import { FixedLayoutStrategy } from "../../strategies/layout/FixedLayoutStrategy";
 import { VirtualScrollSource } from "../../strategies/scroll/VirtualScrollSource";
 import { Plugin } from "../../plugins/Plugin";
+import type { LayoutStrategy } from "../../strategies/layout/LayoutStrategy";
 import { VirtualizerState, Range } from "../../types";
 
 describe("Virtualizer", () => {
@@ -132,36 +133,34 @@ describe("Virtualizer", () => {
   });
 
   describe("clamped layout (huge lists)", () => {
-    // @vitest-environment jsdom
     it("translates item start to render coords when virtualSize exceeds totalSize", () => {
       const ITEM_SIZE = 50;
       const COUNT = 1_000_000;
       const VIEWPORT = 800;
-      const stubStrategy: import("../../strategies/layout/LayoutStrategy").LayoutStrategy =
-        {
-          getItemOffset: (i: number) => i * ITEM_SIZE,
-          getItemSize: () => ITEM_SIZE,
-          getTotalSize: () => 10_000_000,
-          getVirtualSize: () => COUNT * ITEM_SIZE,
-          getVisibleRange: (scrollOffset, viewportSize, count) => {
-            const clampedTotal = 10_000_000;
-            const virtualTotal = count * ITEM_SIZE;
-            const scrollable = clampedTotal - viewportSize;
-            const virtualOffset =
-              scrollable > 0
-                ? (scrollOffset / scrollable) * (virtualTotal - viewportSize)
-                : 0;
-            const startIndex = Math.max(
-              0,
-              Math.min(count - 1, Math.floor(virtualOffset / ITEM_SIZE))
-            );
-            const endIndex = Math.min(
-              count - 1,
-              startIndex + Math.ceil(viewportSize / ITEM_SIZE)
-            );
-            return { startIndex, endIndex };
-          },
-        };
+      const stubStrategy: LayoutStrategy = {
+        getItemOffset: (i: number) => i * ITEM_SIZE,
+        getItemSize: () => ITEM_SIZE,
+        getTotalSize: () => 10_000_000,
+        getVirtualSize: () => COUNT * ITEM_SIZE,
+        getVisibleRange: (scrollOffset, viewportSize, count) => {
+          const clampedTotal = 10_000_000;
+          const virtualTotal = count * ITEM_SIZE;
+          const scrollable = clampedTotal - viewportSize;
+          const virtualOffset =
+            scrollable > 0
+              ? (scrollOffset / scrollable) * (virtualTotal - viewportSize)
+              : 0;
+          const startIndex = Math.max(
+            0,
+            Math.min(count - 1, Math.floor(virtualOffset / ITEM_SIZE))
+          );
+          const endIndex = Math.min(
+            count - 1,
+            startIndex + Math.ceil(viewportSize / ITEM_SIZE)
+          );
+          return { startIndex, endIndex };
+        },
+      };
 
       const src = new VirtualScrollSource();
       src.setViewportSize(VIEWPORT);

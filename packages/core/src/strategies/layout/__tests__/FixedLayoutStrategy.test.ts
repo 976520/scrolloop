@@ -42,14 +42,14 @@ describe("FixedLayoutStrategy", () => {
     });
 
     it("is unaffected by clamping", () => {
-      simulateBrowserCeiling(17_000_000);
+      installFakeBoundingRect(17_000_000);
       const big = new FixedLayoutStrategy(ITEM_SIZE);
       big.getVisibleRange(5_000_000, 800, 10_000_000);
       expect(big.getItemOffset(123_456)).toBe(123_456 * ITEM_SIZE);
     });
 
     it("returns identical values when called by separate consumers", () => {
-      simulateBrowserCeiling(17_000_000);
+      installFakeBoundingRect(17_000_000);
       const shared = new FixedLayoutStrategy(ITEM_SIZE);
       shared.getVisibleRange(1_000_000, 800, 10_000_000);
       const a = shared.getItemOffset(50_000);
@@ -65,7 +65,7 @@ describe("FixedLayoutStrategy", () => {
     const VIEWPORT = 800;
 
     it("clamps getTotalSize to the probed browser maximum", () => {
-      simulateBrowserCeiling(17_000_000);
+      installFakeBoundingRect(17_000_000);
       const strategy = new FixedLayoutStrategy(ITEM_SIZE);
       const total = strategy.getTotalSize(COUNT);
       expect(total).toBeLessThan(ITEM_SIZE * COUNT);
@@ -73,13 +73,13 @@ describe("FixedLayoutStrategy", () => {
     });
 
     it("keeps getVirtualSize unclamped", () => {
-      simulateBrowserCeiling(17_000_000);
+      installFakeBoundingRect(17_000_000);
       const strategy = new FixedLayoutStrategy(ITEM_SIZE);
       expect(strategy.getVirtualSize(COUNT)).toBe(ITEM_SIZE * COUNT);
     });
 
     it("maps scroll positions to the full virtual range", () => {
-      simulateBrowserCeiling(17_000_000);
+      installFakeBoundingRect(17_000_000);
       const strategy = new FixedLayoutStrategy(ITEM_SIZE);
       const clampedTotal = strategy.getTotalSize(COUNT);
 
@@ -95,7 +95,7 @@ describe("FixedLayoutStrategy", () => {
     });
 
     it("produces correct indices when virtual offset exceeds 2^31", () => {
-      simulateBrowserCeiling(17_000_000);
+      installFakeBoundingRect(17_000_000);
       const HUGE_COUNT = 200_000_000;
       const strategy = new FixedLayoutStrategy(ITEM_SIZE);
       const clampedTotal = strategy.getTotalSize(HUGE_COUNT);
