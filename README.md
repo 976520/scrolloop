@@ -2,7 +2,7 @@
 
 # [scrolloop](https://976520.github.io/scrolloop/)
 
-The modern scrolling component for React and React Native
+Modern virtual and infinite scrolling components for React, React Native, Preact, Vue, and Svelte.
 
 ![NPM Downloads](https://img.shields.io/npm/dt/scrolloop)
 ![Repo size](https://img.shields.io/github/repo-size/976520/scrolloop)
@@ -19,6 +19,36 @@ npm install @scrolloop/react
 yarn add @scrolloop/react
 # or
 pnpm add @scrolloop/react
+```
+
+### Preact
+
+```bash
+npm install @scrolloop/preact
+# or
+yarn add @scrolloop/preact
+# or
+pnpm add @scrolloop/preact
+```
+
+### Vue
+
+```bash
+npm install @scrolloop/vue
+# or
+yarn add @scrolloop/vue
+# or
+pnpm add @scrolloop/vue
+```
+
+### Svelte
+
+```bash
+npm install @scrolloop/svelte
+# or
+yarn add @scrolloop/svelte
+# or
+pnpm add @scrolloop/svelte
 ```
 
 ### React Native
@@ -82,7 +112,11 @@ function App() {
 ## Packages
 
 - **@scrolloop/core**: Platform-agnostic virtual scrolling logic
+- **@scrolloop/shared**: Shared infinite loading state and utilities
 - **@scrolloop/react**: React implementation
+- **@scrolloop/preact**: Preact implementation
+- **@scrolloop/vue**: Vue 3 implementation
+- **@scrolloop/svelte**: Svelte 5 implementation
 - **@scrolloop/react-native**: React Native implementation
 
 ## License

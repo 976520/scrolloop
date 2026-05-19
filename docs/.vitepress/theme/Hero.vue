@@ -88,7 +88,8 @@ onUnmounted(() => {
       </p>
 
       <p class="hero-desc animate-on-scroll fade-up delay-200">
-        The modern scrolling component for React and React Native.<br />
+        Modern virtual and infinite scrolling for React, React Native, Preact,
+        Vue, and Svelte.<br />
         Lightweight, Zero dependencies, and blazingly fast.
       </p>
 

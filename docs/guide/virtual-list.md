@@ -27,6 +27,57 @@ function App() {
 }
 ```
 
+```tsx [Preact]
+import { VirtualList } from "@scrolloop/preact";
+
+export function App() {
+  const items = Array.from({ length: 1000 }, (_, i) => `Item #${i}`);
+
+  return (
+    <VirtualList
+      count={items.length}
+      itemSize={50}
+      height={400}
+      renderItem={(index, style) => <div style={style}>{items[index]}</div>}
+    />
+  );
+}
+```
+
+```vue [Vue]
+<script setup lang="ts">
+import { VirtualList } from "@scrolloop/vue";
+
+const items = Array.from({ length: 1000 }, (_, i) => `Item #${i}`);
+</script>
+
+<template>
+  <VirtualList :count="items.length" :item-size="50" :height="400">
+    <template #default="{ index, style }">
+      <div :style="style">{{ items[index] }}</div>
+    </template>
+  </VirtualList>
+</template>
+```
+
+```svelte [Svelte]
+<script lang="ts">
+  import { VirtualList } from "@scrolloop/svelte";
+
+  const items = Array.from({ length: 1000 }, (_, i) => `Item #${i}`);
+</script>
+
+<VirtualList count={items.length} itemSize={50} height={400}>
+  {#snippet children(index, style)}
+    <div
+      style={`position: ${style.position}; top: ${style.top}; left: ${style.left}; right: ${style.right}; height: ${style.height};`}
+    >
+      {items[index]}
+    </div>
+  {/snippet}
+</VirtualList>
+```
+
 ```tsx [React Native]
 import { View, Text } from "react-native";
 import { VirtualList } from "@scrolloop/react-native";
@@ -53,7 +104,7 @@ function App() {
 
 ## Props
 
-VirtualList는 사용 환경에 따라 약간 다른 설정을 지원합니다.
+VirtualList는 모든 런타임에서 같은 핵심 설정을 사용합니다. 각 아이템은 고정된 `itemSize`를 가진다고 가정합니다.
 
 | Prop            | Type       | Required | Description                                                             |
 | :-------------- | :--------- | :------- | :---------------------------------------------------------------------- |
@@ -64,16 +115,28 @@ VirtualList는 사용 환경에 따라 약간 다른 설정을 지원합니다.
 | `overscan`      | `number`   | No       | 화면 밖 버퍼 영역에 미리 렌더링할 아이템의 수입니다. (기본값: 4)        |
 | `onRangeChange` | `Function` | No       | 렌더링되는 인덱스 범위가 변경될 때 호출되는 콜백입니다.                 |
 
-### React 전용 (@scrolloop/react)
+### React / Preact
 
-- `className`: 컨테이너 요소에 적용할 CSS 클래스입니다.
+- React는 `className`, Preact는 `class`를 컨테이너 요소에 적용할 수 있습니다.
 - `style`: 컨테이너 요소에 적용할 인라인 스타일입니다.
+
+### Vue 전용 (@scrolloop/vue)
+
+- 기본 slot은 `{ index, style }`을 전달합니다.
+- `rangeChange` 이벤트로 `{ startIndex, endIndex }`를 받을 수 있습니다.
+
+### Svelte 전용 (@scrolloop/svelte)
+
+- `children` snippet은 `(index, style)`을 전달받습니다.
+- `onRangeChange` prop으로 `{ startIndex, endIndex }`를 받을 수 있습니다.
 
 ### React Native 전용 (@scrolloop/react-native)
 
 - `VirtualList`는 React Native의 `ScrollView`를 상속받으므로, `onScroll`을 제외한 모든 `ScrollViewProps`를 지원합니다.
+- `style`은 `ScrollView`에 적용됩니다.
 
 ## 주의사항
 
 1. **Style 적용**: `renderItem`에서 제공하는 `style` 객체는 각 아이템의 위치를 결정하는 `absolute` 좌표 정보를 포함하고 있습니다. **반드시** 렌더링하는 최상위 element의 스타일에 적용해야 합니다.
-2. **Key 관리**: `renderItem` 내부의 element에 `index`를 기반으로 한 고유한 `key`를 부여하는 것을 권장합니다.
+2. **고정 크기 전제**: 현재 VirtualList는 모든 아이템이 동일한 `itemSize`를 가진다는 전제에서 범위를 계산합니다.
+3. **Key 관리**: React와 React Native에서는 컴포넌트가 인덱스 기반 key를 주입합니다. 렌더링하는 하위 목록이 있다면 하위 요소의 key도 안정적으로 유지하세요.

@@ -6,7 +6,7 @@ scrolloop이 어떻게 수만 개의 item을 성능 저하 없이 빠르게 렌�
 
 windowing이란 전체 리스트 아이템 중에서 현재 사용자에게 보이는(visible) 영역에 해당하는 item만 선택적으로 DOM에 렌더링하는 기법입니다.
 
-사용자가 스크롤할 때마다 scrolloop은 현재 `scrollTop`을 계산하여 해당 위치에 있어야 할 아이템의 인덱스 범위를 찾아냅니다. 10만 개의 data가 있어도 실제 DOM에는 10~20개만 존재하게 됩니다.
+사용자가 스크롤할 때마다 scrolloop은 현재 스크롤 offset을 계산하여 해당 위치에 있어야 할 아이템의 인덱스 범위를 찾아냅니다. 10만 개의 data가 있어도 실제 DOM 또는 native view에는 화면에 필요한 항목과 overscan 항목만 존재하게 됩니다.
 
 직접 scroll해 보세요!
 
@@ -16,7 +16,7 @@ windowing이란 전체 리스트 아이템 중에서 현재 사용자에게 보�
 
 ## 2. overscan
 
-아주 빠르게 scroll할 때, 브라우저가 다음 item을 그리기 전에 잠깐 공백이 보이는 현상을 방지하기 위한 기법으로, viewport 바로 위와 아래에 지정된 개수(`overscan`)만큼의 item을 미리 렌더링해 둡니다.
+아주 빠르게 scroll할 때, 다음 item을 그리기 전에 잠깐 공백이 보이는 현상을 방지하기 위한 기법으로, viewport 바로 위와 아래에 지정된 개수(`overscan`)만큼의 item을 미리 렌더링해 둡니다. scrolloop은 스크롤 방향에 따라 진행 방향의 overscan 범위를 조금 더 넓게 잡습니다.
 
 ## 3. 절대 좌표 배치 (Absolute Positioning)
 
