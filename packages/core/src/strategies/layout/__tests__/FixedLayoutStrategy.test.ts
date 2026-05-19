@@ -114,5 +114,23 @@ describe("FixedLayoutStrategy", () => {
       const b = strategy.getItemOffset(range.startIndex + 1);
       expect(b - a).toBeCloseTo(ITEM_SIZE, 5);
     });
+
+    it("produces correct indices when virtual offset exceeds 2^31", () => {
+      simulateBrowserCeiling(17_000_000);
+      const HUGE_COUNT = 200_000_000;
+      const strategy = new FixedLayoutStrategy(ITEM_SIZE);
+      const clampedTotal = strategy.getTotalSize(HUGE_COUNT);
+
+      const range = strategy.getVisibleRange(
+        clampedTotal - VIEWPORT,
+        VIEWPORT,
+        HUGE_COUNT
+      );
+
+      const virtualOffset = ITEM_SIZE * (HUGE_COUNT - 1);
+      expect(virtualOffset).toBeGreaterThan(2 ** 31);
+      expect(range.startIndex).toBeGreaterThanOrEqual(0);
+      expect(range.endIndex).toBe(HUGE_COUNT - 1);
+    });
   });
 });

@@ -58,7 +58,7 @@ export class FixedLayoutStrategy implements LayoutStrategy {
 
     const startIndex = clamp(
       0,
-      (virtualOffset / this.#itemSize) | 0,
+      Math.floor(virtualOffset / this.#itemSize),
       count - 1
     );
     const visibleCount = Math.ceil(viewportSize / this.#itemSize);
