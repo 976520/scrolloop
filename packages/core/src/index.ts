@@ -19,3 +19,7 @@ export type {
 
 export { clamp } from "./utils/clamp";
 export { calculateVirtualRange } from "./utils/calculateVirtualRange";
+export {
+  getMaxElementSize,
+  resetMaxElementSizeCache,
+} from "./utils/getMaxElementSize";
