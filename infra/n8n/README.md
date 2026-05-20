@@ -70,7 +70,7 @@ Inside n8n, build the workflows defined in
 
 1. **Issue** — `Webhook` → `IF` (label gate) → `IF` (author_association gate) → `Switch` (task_type) → `Set` (rendered prompt) → `HTTP Request` (`workflow_dispatch`).
 2. **PR comment** — `Webhook` → `IF` (slash command + author + non-fork) → `Switch` (command) → `HTTP Request` (`workflow_dispatch`).
-3. **CI failure** — `Webhook` → `IF` (`conclusion == failure`) → `HTTP Request` (fetch logs) → `Anthropic` (summarize) → `HTTP Request` (comment on PR). Never dispatches `ai-dev.yml`.
+3. **CI failure** — `Webhook` → `IF` (`conclusion == failure`) → `HTTP Request` (fetch logs) → `HTTP Request` to Gemini API (summarize) → `HTTP Request` (comment on PR). Never dispatches `ai-dev.yml`.
 
 Export each workflow as JSON and commit to `infra/n8n/workflows/` so deployments
 are reproducible. (That folder is intentionally not in this initial scaffold —
