@@ -50,12 +50,16 @@ Rules:
 7. Do not modify any of the following unless the issue explicitly says so:
    - `.github/workflows/cd.yml`
    - `.github/workflows/ai-dev.yml`
-   - any file matching `*token*`, `*secret*`, `.npmrc`, `.npmignore`
-   - `package.json` `version` fields, `pnpm-lock.yaml` (unless `package.json` deps
-     were intentionally changed in this task)
+   - secret-bearing files by exact name/extension: `.env`, `.env.*`,
+     `*.pem`, `*.key`, `*.p12`, `secrets.yml`, `secrets.yaml`
+   - registry / publish config: `.npmrc`, `.npmignore`
+   - `package.json` `version` fields
+   - `pnpm-lock.yaml` (only update when `package.json` `dependencies` /
+     `devDependencies` / `peerDependencies` were intentionally changed in this
+     task; do not run a blind lockfile refresh)
 8. Run verification before declaring done. Try, in order, and skip any that are not
    defined in `package.json`:
-       pnpm install --frozen-lockfile
+       pnpm install        # omit --frozen-lockfile when you changed package.json
        pnpm typecheck
        pnpm lint
        pnpm test
