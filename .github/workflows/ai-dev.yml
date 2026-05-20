@@ -93,6 +93,8 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TASK_TYPE: ${{ inputs.task_type }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          # Required for headless CI: skip the interactive "trusted folder" prompt.
+          GEMINI_CLI_TRUST_WORKSPACE: 'true'
         run: |
           set -e
           npm install -g @google/gemini-cli
