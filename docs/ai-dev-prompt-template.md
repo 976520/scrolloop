@@ -59,7 +59,7 @@ Rules:
      task; do not run a blind lockfile refresh)
 8. Run verification before declaring done. Try, in order, and skip any that are not
    defined in `package.json`:
-       pnpm install        # omit --frozen-lockfile when you changed package.json
+       pnpm install --frozen-lockfile        # omit when you intentionally changed package.json
        pnpm typecheck
        pnpm lint
        pnpm test
