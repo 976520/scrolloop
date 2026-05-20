@@ -22,15 +22,26 @@ if ! command -v docker >/dev/null 2>&1; then
   log "Docker not found; installing from get.docker.com"
   curl -fsSL https://get.docker.com | sudo sh
   sudo usermod -aG docker "$USER"
-  warn "You were added to the 'docker' group. Log out and back in (or 'newgrp docker') before continuing."
+  warn "Added $USER to the 'docker' group. The new group is not active in this shell yet; this script will use sudo for docker commands until you re-login."
 else
-  log "Docker present: $(docker --version)"
+  log "Docker present: $(sudo -n docker --version 2>/dev/null || docker --version)"
 fi
 
-if ! docker compose version >/dev/null 2>&1; then
+# Pick a docker invocation that works whether or not the current shell has the
+# docker group activated yet (right after a fresh install it won't).
+if docker info >/dev/null 2>&1; then
+  DOCKER="docker"
+elif sudo -n docker info >/dev/null 2>&1; then
+  DOCKER="sudo docker"
+  warn "Using 'sudo docker' for this run; log out and back in to use plain 'docker'."
+else
+  die "Cannot reach Docker daemon (neither as $USER nor via sudo). Is the daemon running?"
+fi
+
+if ! $DOCKER compose version >/dev/null 2>&1; then
   die "docker compose plugin is missing. Install 'docker-compose-plugin' (Ubuntu: apt install docker-compose-plugin)."
 else
-  log "Compose present: $(docker compose version)"
+  log "Compose present: $($DOCKER compose version)"
 fi
 
 # --- 3. .env ------------------------------------------------------------------
@@ -60,14 +71,14 @@ fi
 
 # --- 4. boot ------------------------------------------------------------------
 log "Pulling images"
-docker compose pull
+$DOCKER compose pull
 
 log "Starting n8n"
-docker compose up -d
+$DOCKER compose up -d
 
 log "Waiting for healthcheck..."
 for i in $(seq 1 30); do
-  status=$(docker inspect -f '{{.State.Health.Status}}' n8n 2>/dev/null || echo "starting")
+  status=$($DOCKER inspect -f '{{.State.Health.Status}}' n8n 2>/dev/null || echo "starting")
   if [ "$status" = "healthy" ]; then
     log "n8n is healthy"
     break
