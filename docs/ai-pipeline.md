@@ -53,6 +53,7 @@ The pipeline is driven entirely by labels. Add these to the repository before en
 | `area:preact`       | `packages/preact`            |
 | `area:vue`          | `packages/vue`               |
 | `area:svelte`       | `packages/svelte`            |
+| `area:shared`       | `packages/shared`            |
 | `area:docs`         | `docs/`, READMEs             |
 | `area:build`        | build, tsup, turbo, tsconfig |
 
