@@ -1,0 +1,12 @@
+# Caddyfile for fronting n8n with HTTPS via Let's Encrypt.
+#
+# 1. Copy this file to "Caddyfile" next to docker-compose.yml.
+# 2. Replace YOUR_DOMAIN_HERE with the actual hostname (e.g. n8n.example.com).
+# 3. Make sure DNS A record points at this server and 80/443 are open.
+# 4. Uncomment the caddy service block in docker-compose.yml and start it:
+#       docker compose up -d caddy
+
+YOUR_DOMAIN_HERE {
+    encode gzip
+    reverse_proxy n8n:5678
+}

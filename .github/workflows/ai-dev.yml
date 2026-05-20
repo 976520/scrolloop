@@ -1,0 +1,201 @@
+name: AI Dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'GitHub issue number this run is associated with (numeric)'
+        required: true
+        type: string
+      task_type:
+        description: 'plan | bugfix | feature | docs | test'
+        required: true
+        type: string
+      prompt:
+        description: 'Rendered prompt produced by n8n (see docs/ai-dev-prompt-template.md)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ai-dev-issue-${{ inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  ai-dev:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BRANCH_NAME: ai/issue-${{ inputs.issue_number }}
+    steps:
+      - name: Validate inputs
+        env:
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          TASK_TYPE: ${{ inputs.task_type }}
+        run: |
+          if ! printf '%s' "$ISSUE_NUMBER" | grep -Eq '^[0-9]+$'; then
+            echo "::error::issue_number must be numeric, got: $ISSUE_NUMBER"
+            exit 1
+          fi
+          case "$TASK_TYPE" in
+            plan|bugfix|feature|docs|test) ;;
+            *)
+              echo "::error::task_type must be one of plan|bugfix|feature|docs|test, got: $TASK_TYPE"
+              exit 1
+              ;;
+          esac
+
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Exclude runtime artifacts from git
+        run: |
+          mkdir -p .git/info
+          if ! grep -qxF '.ai/' .git/info/exclude 2>/dev/null; then
+            echo '.ai/' >> .git/info/exclude
+          fi
+
+      - name: Create working branch
+        run: |
+          git config user.name  "scrolloop-ai[bot]"
+          git config user.email "scrolloop-ai[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH_NAME"
+
+      - name: Write prompt to file
+        env:
+          PROMPT: ${{ inputs.prompt }}
+        run: |
+          mkdir -p .ai
+          printf '%s' "$PROMPT" > .ai/prompt.txt
+          echo "Prompt length: $(wc -c < .ai/prompt.txt) bytes"
+
+      - name: Run Claude Code
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TASK_TYPE: ${{ inputs.task_type }}
+        run: |
+          set -e
+          npm install -g @anthropic-ai/claude-code
+          if [ "$TASK_TYPE" = "plan" ]; then
+            claude --print --permission-mode plan < .ai/prompt.txt > .ai/plan.md
+          else
+            claude --print --permission-mode acceptEdits < .ai/prompt.txt > .ai/run.log
+          fi
+
+      - name: Verify
+        id: verify
+        run: |
+          set -eo pipefail
+          mkdir -p .ai
+          : > .ai/verify.md
+          {
+            echo "## Verification"
+            echo ""
+          } >> .ai/verify.md
+          FAILED=0
+          for cmd in "pnpm typecheck" "pnpm lint" "pnpm test" "pnpm build"; do
+            script="${cmd#pnpm }"
+            if pnpm run | grep -qE "^ *${script} *"; then
+              {
+                echo "### \`$cmd\`"
+                echo '```'
+              } >> .ai/verify.md
+              rc=0
+              $cmd >> .ai/verify.md 2>&1 || rc=$?
+              {
+                echo '```'
+                echo "exit: $rc"
+                echo ""
+              } >> .ai/verify.md
+              [ "$rc" -eq 0 ] || FAILED=1
+            else
+              {
+                echo "### \`$cmd\` - skipped (no script)"
+                echo ""
+              } >> .ai/verify.md
+            fi
+          done
+          cat .ai/verify.md
+          if [ "$FAILED" -ne 0 ]; then
+            echo "::error::One or more verification scripts failed. See .ai/verify.md."
+            exit 1
+          fi
+
+      - name: Commit changes
+        id: commit
+        run: |
+          git reset .ai || true
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to commit."
+          else
+            git commit -m "ai: address issue #${{ inputs.issue_number }} (${{ inputs.task_type }})"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push branch
+        if: steps.commit.outputs.changed == 'true' || inputs.task_type == 'plan'
+        run: |
+          if ! git log develop..HEAD --oneline | grep -q .; then
+            git commit --allow-empty -m "ai: plan for issue #${{ inputs.issue_number }}"
+          fi
+          git push -u origin "$BRANCH_NAME" --force-with-lease
+
+      - name: Build PR body
+        if: steps.commit.outputs.changed == 'true' || inputs.task_type == 'plan'
+        id: body
+        run: |
+          {
+            echo "Automated run for issue #${{ inputs.issue_number }}."
+            echo ""
+            echo "- task_type: \`${{ inputs.task_type }}\`"
+            echo "- branch: \`${{ env.BRANCH_NAME }}\`"
+            echo ""
+            if [ -f .ai/plan.md ]; then
+              echo "## Plan"
+              echo ""
+              cat .ai/plan.md
+              echo ""
+            fi
+            if [ -f .ai/verify.md ]; then
+              cat .ai/verify.md
+            fi
+            echo ""
+            echo "_This PR was opened by the AI dev workflow. A human must review and merge._"
+          } > .ai/pr-body.md
+
+      - name: Open pull request
+        if: steps.commit.outputs.changed == 'true' || inputs.task_type == 'plan'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE_PREFIX=""
+          if [ "${{ inputs.task_type }}" = "plan" ]; then
+            TITLE_PREFIX="[plan] "
+          fi
+          gh pr create \
+            --base develop \
+            --head "$BRANCH_NAME" \
+            --title "${TITLE_PREFIX}ai: issue #${{ inputs.issue_number }} (${{ inputs.task_type }})" \
+            --body-file .ai/pr-body.md \
+            || gh pr edit "$BRANCH_NAME" --body-file .ai/pr-body.md

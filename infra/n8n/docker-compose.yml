@@ -1,0 +1,57 @@
+# n8n orchestrator for the scrolloop AI dev pipeline.
+# See ../../docs/ai-pipeline.md for the overall architecture.
+#
+# Default deployment (MVP, no domain):
+#   - n8n bound to 127.0.0.1:5678 on the host (not reachable from the internet).
+#   - Access the UI via SSH tunnel from your workstation:
+#       ssh -L 5678:127.0.0.1:5678 ubuntu@ssh.gsmsv.site -p 27113
+#     then open http://localhost:5678 in your browser.
+#   - GitHub webhooks cannot reach this yet (no public HTTPS). Enable the Caddy
+#     service below once a domain points at this host.
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Enable when a domain is pointed at this host.
+  # 1) Point DNS A record (e.g. n8n.example.com) at this server.
+  # 2) Open firewall ports 80 and 443.
+  # 3) Copy Caddyfile.example to Caddyfile and set your real domain.
+  # 4) In .env switch N8N_HOST / N8N_PROTOCOL / WEBHOOK_URL to your HTTPS URL.
+  # 5) Remove the "127.0.0.1:" prefix from the n8n ports binding above so Caddy
+  #    (in the same compose network) can reach n8n at http://n8n:5678 — actually
+  #    inter-container traffic does not need the host port at all, so prefer:
+  #       ports: []        # remove host binding entirely
+  # 6) docker compose up -d caddy
+  #
+  # caddy:
+  #   image: caddy:2-alpine
+  #   container_name: n8n-caddy
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./Caddyfile:/etc/caddy/Caddyfile:ro
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+  #   depends_on:
+  #     - n8n
+
+volumes:
+  n8n_data:
+  # caddy_data:
+  # caddy_config:
