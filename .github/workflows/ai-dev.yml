@@ -103,33 +103,42 @@ jobs:
 
       - name: Verify
         id: verify
-        continue-on-error: true
         run: |
-          set +e
-          FAILED=0
+          set -eo pipefail
+          mkdir -p .ai
+          : > .ai/verify.md
           {
             echo "## Verification"
             echo ""
-            for cmd in "pnpm typecheck" "pnpm lint" "pnpm test" "pnpm build"; do
-              script="${cmd#pnpm }"
-              if pnpm run | grep -qE "^ *${script} *"; then
+          } >> .ai/verify.md
+          FAILED=0
+          for cmd in "pnpm typecheck" "pnpm lint" "pnpm test" "pnpm build"; do
+            script="${cmd#pnpm }"
+            if pnpm run | grep -qE "^ *${script} *"; then
+              {
                 echo "### \`$cmd\`"
                 echo '```'
-                output=$($cmd 2>&1)
-                rc=$?
-                echo "$output" | tail -n 80
+              } >> .ai/verify.md
+              rc=0
+              $cmd >> .ai/verify.md 2>&1 || rc=$?
+              {
                 echo '```'
                 echo "exit: $rc"
                 echo ""
-                if [ $rc -ne 0 ]; then FAILED=1; fi
-              else
+              } >> .ai/verify.md
+              [ "$rc" -eq 0 ] || FAILED=1
+            else
+              {
                 echo "### \`$cmd\` - skipped (no script)"
                 echo ""
-              fi
-            done
-          } > .ai/verify.md
+              } >> .ai/verify.md
+            fi
+          done
           cat .ai/verify.md
-          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ "$FAILED" -ne 0 ]; then
+            echo "::error::One or more verification scripts failed. See .ai/verify.md."
+            exit 1
+          fi
 
       - name: Commit changes
         id: commit
@@ -190,9 +199,3 @@ jobs:
             --title "${TITLE_PREFIX}ai: issue #${{ inputs.issue_number }} (${{ inputs.task_type }})" \
             --body-file .ai/pr-body.md \
             || gh pr edit "$BRANCH_NAME" --body-file .ai/pr-body.md
-
-      - name: Fail if verification failed
-        if: steps.verify.outputs.failed == '1'
-        run: |
-          echo "::error::One or more verification scripts failed. See .ai/verify.md in the PR body."
-          exit 1
