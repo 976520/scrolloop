@@ -95,10 +95,29 @@ jobs:
         run: |
           set -e
           npm install -g @anthropic-ai/claude-code
+          echo "::group::claude version"
+          claude --version || true
+          echo "::endgroup::"
+
+          set +e
           if [ "$TASK_TYPE" = "plan" ]; then
-            claude --print --permission-mode plan < .ai/prompt.txt > .ai/plan.md
+            claude --print --permission-mode plan < .ai/prompt.txt > .ai/plan.md 2> .ai/claude.err
           else
-            claude --print --permission-mode acceptEdits < .ai/prompt.txt > .ai/run.log
+            claude --print --permission-mode acceptEdits < .ai/prompt.txt > .ai/run.log 2> .ai/claude.err
+          fi
+          rc=$?
+          set -e
+
+          echo "::group::claude stderr"
+          cat .ai/claude.err 2>/dev/null || echo "(no stderr file)"
+          echo "::endgroup::"
+
+          if [ $rc -ne 0 ]; then
+            echo "::error::claude exited with code $rc"
+            echo "::group::stdout tail"
+            tail -n 40 .ai/plan.md 2>/dev/null || tail -n 40 .ai/run.log 2>/dev/null || echo "(no stdout file)"
+            echo "::endgroup::"
+            exit $rc
           fi
 
       - name: Verify
