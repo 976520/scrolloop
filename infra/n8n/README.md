@@ -56,10 +56,10 @@ initial n8n owner account.
 Do not put workflow secrets in `.env`. Add them in the n8n UI under **Credentials**
 so they are encrypted with `N8N_ENCRYPTION_KEY`:
 
-| Name                 | Type        | Scopes                                                                            |
-| -------------------- | ----------- | --------------------------------------------------------------------------------- |
-| GitHub (scrolloop)   | GitHub PAT  | `contents:write`, `pull_requests:write`, `issues:write`, `actions:write`          |
-| Anthropic (optional) | HTTP Header | `x-api-key: <key>` — only if n8n itself calls Claude (e.g. CI failure summarizer) |
+| Name               | Type        | Scopes                                                                                 |
+| ------------------ | ----------- | -------------------------------------------------------------------------------------- |
+| GitHub (scrolloop) | GitHub PAT  | `contents:write`, `pull_requests:write`, `issues:write`, `actions:write`               |
+| Gemini (optional)  | HTTP Header | `x-goog-api-key: <key>` — only if n8n itself calls Gemini (e.g. CI failure summarizer) |
 
 The PAT is what n8n uses to call `POST /repos/zaewc/scrolloop/actions/workflows/ai-dev.yml/dispatches`.
 

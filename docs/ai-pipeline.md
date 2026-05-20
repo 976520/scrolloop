@@ -105,7 +105,7 @@ Rules:
 Trigger: `check_run` or `workflow_run` with `conclusion=failure` on a PR branch.
 
 1. Pull the failing job's log via the GitHub API.
-2. Summarize the log with Claude (n8n side, read-only).
+2. Summarize the log with Gemini (n8n side, read-only).
 3. Post a single PR comment with the analysis.
 4. Do **not** dispatch `ai-dev.yml`. A maintainer must explicitly comment `/ai-fix` to authorize an actual fix attempt.
 
@@ -169,7 +169,8 @@ To enable the pipeline, a maintainer must:
 
 1. Create the labels listed in section 1.
 2. Add the following GitHub Actions secrets:
-   - `ANTHROPIC_API_KEY` — used by Claude Code inside `ai-dev.yml`.
+   - `GEMINI_API_KEY` — used by Gemini CLI inside `ai-dev.yml`. Get one from Google AI Studio (https://aistudio.google.com/apikey); free tier covers `gemini-2.5-flash`.
+   - (optional repo variable) `GEMINI_MODEL` — pin a non-default model, e.g. `gemini-2.5-pro`. Defaults to `gemini-2.5-flash`.
 3. Configure n8n with:
    - a GitHub App or PAT with `contents:write`, `pull_requests:write`, `issues:write`, `actions:write` (for `workflow_dispatch`),
    - webhook endpoints for `issues`, `issue_comment`, and `workflow_run`.

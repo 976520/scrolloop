@@ -81,5 +81,5 @@ Output (will be used as the PR description):
 ## Notes for n8n
 
 - Substitute `{{ISSUE_NUMBER}}`, `{{ISSUE_TITLE}}`, `{{ISSUE_BODY}}`, `{{TASK_TYPE}}`, and `{{AREA_LABELS}}` before dispatch.
-- Do not include any other repository content inline; the workflow checks out the repo so Claude can read it directly.
+- Do not include any other repository content inline; the workflow checks out the repo so Gemini can read it directly.
 - Do not include secrets, tokens, or environment values in the rendered prompt.
