@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'GitHub issue number this run is associated with'
+        description: 'GitHub issue number this run is associated with (numeric)'
         required: true
         type: string
       task_type:
@@ -32,6 +32,23 @@ jobs:
     env:
       BRANCH_NAME: ai/issue-${{ inputs.issue_number }}
     steps:
+      - name: Validate inputs
+        env:
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          TASK_TYPE: ${{ inputs.task_type }}
+        run: |
+          if ! printf '%s' "$ISSUE_NUMBER" | grep -Eq '^[0-9]+$'; then
+            echo "::error::issue_number must be numeric, got: $ISSUE_NUMBER"
+            exit 1
+          fi
+          case "$TASK_TYPE" in
+            plan|bugfix|feature|docs|test) ;;
+            *)
+              echo "::error::task_type must be one of plan|bugfix|feature|docs|test, got: $TASK_TYPE"
+              exit 1
+              ;;
+          esac
+
       - name: Checkout develop
         uses: actions/checkout@v4
         with:
@@ -49,6 +66,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Exclude runtime artifacts from git
+        run: |
+          mkdir -p .git/info
+          if ! grep -qxF '.ai/' .git/info/exclude 2>/dev/null; then
+            echo '.ai/' >> .git/info/exclude
+          fi
 
       - name: Create working branch
         run: |
@@ -71,18 +95,18 @@ jobs:
         run: |
           set -e
           npm install -g @anthropic-ai/claude-code
-          # `plan` runs are read-only: no code edits, plan goes into PR body.
           if [ "$TASK_TYPE" = "plan" ]; then
             claude --print --permission-mode plan < .ai/prompt.txt > .ai/plan.md
           else
             claude --print --permission-mode acceptEdits < .ai/prompt.txt > .ai/run.log
           fi
 
-      - name: Verify (best-effort)
+      - name: Verify
         id: verify
         continue-on-error: true
         run: |
           set +e
+          FAILED=0
           {
             echo "## Verification"
             echo ""
@@ -91,21 +115,26 @@ jobs:
               if pnpm run | grep -qE "^ *${script} *"; then
                 echo "### \`$cmd\`"
                 echo '```'
-                $cmd 2>&1 | tail -n 80
+                output=$($cmd 2>&1)
                 rc=$?
+                echo "$output" | tail -n 80
                 echo '```'
                 echo "exit: $rc"
                 echo ""
+                if [ $rc -ne 0 ]; then FAILED=1; fi
               else
-                echo "### \`$cmd\` — skipped (no script)"
+                echo "### \`$cmd\` - skipped (no script)"
                 echo ""
               fi
             done
           } > .ai/verify.md
+          cat .ai/verify.md
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
 
       - name: Commit changes
         id: commit
         run: |
+          git reset .ai || true
           git add -A
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -118,8 +147,6 @@ jobs:
       - name: Push branch
         if: steps.commit.outputs.changed == 'true' || inputs.task_type == 'plan'
         run: |
-          # For plan runs we still want a branch so a PR with the plan can be opened,
-          # so create an empty commit if nothing changed.
           if ! git log develop..HEAD --oneline | grep -q .; then
             git commit --allow-empty -m "ai: plan for issue #${{ inputs.issue_number }}"
           fi
@@ -147,7 +174,6 @@ jobs:
             echo ""
             echo "_This PR was opened by the AI dev workflow. A human must review and merge._"
           } > .ai/pr-body.md
-          echo "path=.ai/pr-body.md" >> "$GITHUB_OUTPUT"
 
       - name: Open pull request
         if: steps.commit.outputs.changed == 'true' || inputs.task_type == 'plan'
@@ -164,3 +190,9 @@ jobs:
             --title "${TITLE_PREFIX}ai: issue #${{ inputs.issue_number }} (${{ inputs.task_type }})" \
             --body-file .ai/pr-body.md \
             || gh pr edit "$BRANCH_NAME" --body-file .ai/pr-body.md
+
+      - name: Fail if verification failed
+        if: steps.verify.outputs.failed == '1'
+        run: |
+          echo "::error::One or more verification scripts failed. See .ai/verify.md in the PR body."
+          exit 1
