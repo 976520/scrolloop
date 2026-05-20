@@ -88,34 +88,41 @@ jobs:
           printf '%s' "$PROMPT" > .ai/prompt.txt
           echo "Prompt length: $(wc -c < .ai/prompt.txt) bytes"
 
-      - name: Run Claude Code
+      - name: Run Gemini
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TASK_TYPE: ${{ inputs.task_type }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
         run: |
           set -e
-          npm install -g @anthropic-ai/claude-code
-          echo "::group::claude version"
-          claude --version || true
+          npm install -g @google/gemini-cli
+          echo "::group::gemini version"
+          gemini --version || true
           echo "::endgroup::"
 
           set +e
           if [ "$TASK_TYPE" = "plan" ]; then
-            claude --print --permission-mode plan < .ai/prompt.txt > .ai/plan.md 2> .ai/claude.err
+            # Plan mode: no file edits. Prompt itself forbids edits; we omit
+            # --yolo so any unexpected tool call would block (CI would time
+            # out rather than silently mutate the repo).
+            gemini --model "$GEMINI_MODEL" --prompt "$(cat .ai/prompt.txt)" \
+              > .ai/plan.md 2> .ai/gemini.err
           else
-            claude --print --permission-mode acceptEdits < .ai/prompt.txt > .ai/run.log 2> .ai/claude.err
+            # Agent loop with auto-accept for non-interactive CI.
+            gemini --model "$GEMINI_MODEL" --yolo --prompt "$(cat .ai/prompt.txt)" \
+              > .ai/run.log 2> .ai/gemini.err
           fi
           rc=$?
           set -e
 
-          echo "::group::claude stderr"
-          cat .ai/claude.err 2>/dev/null || echo "(no stderr file)"
+          echo "::group::gemini stderr"
+          cat .ai/gemini.err 2>/dev/null || echo "(no stderr file)"
           echo "::endgroup::"
 
           if [ $rc -ne 0 ]; then
-            echo "::error::claude exited with code $rc"
+            echo "::error::gemini exited with code $rc"
             echo "::group::stdout tail"
-            tail -n 40 .ai/plan.md 2>/dev/null || tail -n 40 .ai/run.log 2>/dev/null || echo "(no stdout file)"
+            tail -n 60 .ai/plan.md 2>/dev/null || tail -n 60 .ai/run.log 2>/dev/null || echo "(no stdout file)"
             echo "::endgroup::"
             exit $rc
           fi
