@@ -10,3 +10,7 @@ dist/
 coverage/
 cache/
 .vscode
+
+# n8n deployment secrets (see infra/n8n/.env.example)
+infra/n8n/.env
+infra/n8n/Caddyfile
