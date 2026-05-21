@@ -103,19 +103,26 @@ jobs:
           echo "::endgroup::"
 
           set +e
+          # --yolo is required in headless CI for both modes (without it any
+          # tool-call confirmation hangs and stdout stays empty). For plan mode
+          # we run the agent for context-gathering and revert any file changes
+          # below; non-plan modes keep the file changes for the PR.
           if [ "$TASK_TYPE" = "plan" ]; then
-            # Plan mode: no file edits. Prompt itself forbids edits; we omit
-            # --yolo so any unexpected tool call would block (CI would time
-            # out rather than silently mutate the repo).
-            gemini --model "$GEMINI_MODEL" --prompt "$(cat .ai/prompt.txt)" \
+            gemini --model "$GEMINI_MODEL" --yolo --prompt "$(cat .ai/prompt.txt)" \
               > .ai/plan.md 2> .ai/gemini.err
           else
-            # Agent loop with auto-accept for non-interactive CI.
             gemini --model "$GEMINI_MODEL" --yolo --prompt "$(cat .ai/prompt.txt)" \
               > .ai/run.log 2> .ai/gemini.err
           fi
           rc=$?
           set -e
+
+          # Plan mode is read-only. If the model edited anything despite the
+          # prompt, revert it so the PR contains only the plan text.
+          if [ "$TASK_TYPE" = "plan" ]; then
+            git checkout -- . 2>/dev/null || true
+            git clean -fd -e .ai 2>/dev/null || true
+          fi
 
           echo "::group::gemini stderr"
           cat .ai/gemini.err 2>/dev/null || echo "(no stderr file)"
