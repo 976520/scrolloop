@@ -15,6 +15,11 @@ on:
         description: 'Rendered prompt produced by n8n (see docs/ai-dev-prompt-template.md)'
         required: true
         type: string
+      head_branch:
+        description: 'Existing branch to commit onto. If empty, ai/issue-<issue_number> is created from develop.'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -30,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      BRANCH_NAME: ai/issue-${{ inputs.issue_number }}
+      BRANCH_NAME: ${{ inputs.head_branch != '' && inputs.head_branch || format('ai/issue-{0}', inputs.issue_number) }}
     steps:
       - name: Validate inputs
         env:
@@ -74,11 +79,21 @@ jobs:
             echo '.ai/' >> .git/info/exclude
           fi
 
-      - name: Create working branch
+      - name: Switch to working branch
         run: |
           git config user.name  "scrolloop-ai[bot]"
           git config user.email "scrolloop-ai[bot]@users.noreply.github.com"
-          git checkout -B "$BRANCH_NAME"
+          # Idempotent: continue an existing branch if it's already pushed (e.g.
+          # /ai-apply-review on an open PR), otherwise create a fresh branch
+          # from develop. Either way, BRANCH_NAME ends up checked out.
+          git fetch origin "$BRANCH_NAME" 2>/dev/null || true
+          if git rev-parse --verify "origin/$BRANCH_NAME" >/dev/null 2>&1; then
+            git checkout -B "$BRANCH_NAME" "origin/$BRANCH_NAME"
+            echo "Continuing on existing branch $BRANCH_NAME"
+          else
+            git checkout -B "$BRANCH_NAME"
+            echo "Created new branch $BRANCH_NAME from develop"
+          fi
 
       - name: Write prompt to file
         env:
