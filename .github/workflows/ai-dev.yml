@@ -92,8 +92,11 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TASK_TYPE: ${{ inputs.task_type }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
-          # Required for headless CI: skip the interactive "trusted folder" prompt.
+          # Comma-separated fallback chain. The CLI is tried with each model in
+          # order; if a model hits HTTP 429 quota, the next one is tried. For
+          # `plan` task_type we also fall back to a direct Gemini REST API call
+          # which bypasses the CLI's internal model routing entirely.
+          GEMINI_MODELS: ${{ vars.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash-lite' }}
           GEMINI_CLI_TRUST_WORKSPACE: 'true'
         run: |
           set -e
@@ -102,36 +105,74 @@ jobs:
           gemini --version || true
           echo "::endgroup::"
 
-          set +e
-          # --yolo is required in headless CI for both modes (without it any
-          # tool-call confirmation hangs and stdout stays empty). For plan mode
-          # we run the agent for context-gathering and revert any file changes
-          # below; non-plan modes keep the file changes for the PR.
-          if [ "$TASK_TYPE" = "plan" ]; then
-            gemini --model "$GEMINI_MODEL" --yolo --prompt "$(cat .ai/prompt.txt)" \
-              > .ai/plan.md 2> .ai/gemini.err
-          else
-            gemini --model "$GEMINI_MODEL" --yolo --prompt "$(cat .ai/prompt.txt)" \
-              > .ai/run.log 2> .ai/gemini.err
-          fi
-          rc=$?
-          set -e
+          OUT_FILE=".ai/run.log"
+          [ "$TASK_TYPE" = "plan" ] && OUT_FILE=".ai/plan.md"
 
-          # Plan mode is read-only. If the model edited anything despite the
-          # prompt, revert it so the PR contains only the plan text.
+          rc=1
+          IFS=',' read -ra MODELS <<< "$GEMINI_MODELS"
+          for model in "${MODELS[@]}"; do
+            model="$(echo "$model" | xargs)"  # trim whitespace
+            echo "::group::gemini CLI attempt: $model"
+            set +e
+            gemini --model "$model" --yolo --prompt "$(cat .ai/prompt.txt)" \
+              > "$OUT_FILE" 2> .ai/gemini.err
+            rc=$?
+            set -e
+            echo "exit: $rc"
+            tail -n 20 .ai/gemini.err 2>/dev/null || true
+            echo "::endgroup::"
+
+            if [ $rc -eq 0 ]; then
+              echo "succeeded with $model"
+              break
+            fi
+            if grep -qE 'TerminalQuotaError|Quota exceeded|"code": ?429|status: ?429' .ai/gemini.err 2>/dev/null; then
+              echo "::notice::$model hit quota; trying next model"
+              continue
+            fi
+            echo "::warning::$model failed with non-quota error; will not retry other CLI models"
+            break
+          done
+
+          # REST API fallback (plan-only). Bypasses gemini-cli entirely so the
+          # CLI's internal calls to gemini-2.5-flash (used for tool routing /
+          # summarization) cannot cause us to hit that model's 20-RPD ceiling.
+          if [ $rc -ne 0 ] && [ "$TASK_TYPE" = "plan" ]; then
+            echo "::notice::falling back to direct Gemini REST API for plan mode"
+            for model in "${MODELS[@]}"; do
+              model="$(echo "$model" | xargs)"
+              echo "::group::REST API attempt: $model"
+              body=$(jq -n --rawfile p .ai/prompt.txt '{contents:[{parts:[{text:$p}]}]}')
+              http_code=$(curl -sS -o .ai/plan-raw.json -w '%{http_code}' \
+                "https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent" \
+                -H "x-goog-api-key: $GEMINI_API_KEY" \
+                -H "Content-Type: application/json" \
+                -d "$body" || echo "000")
+              echo "HTTP $http_code"
+              if [ "$http_code" = "200" ]; then
+                jq -r '.candidates[0].content.parts[0].text // empty' .ai/plan-raw.json > "$OUT_FILE"
+                if [ -s "$OUT_FILE" ]; then
+                  rc=0
+                  echo "REST API succeeded with $model"
+                  echo "::endgroup::"
+                  break
+                fi
+              fi
+              jq -r '.error.message // .' .ai/plan-raw.json 2>/dev/null | head -3 || true
+              echo "::endgroup::"
+            done
+          fi
+
+          # Plan mode is read-only: revert any incidental file edits.
           if [ "$TASK_TYPE" = "plan" ]; then
             git checkout -- . 2>/dev/null || true
             git clean -fd -e .ai 2>/dev/null || true
           fi
 
-          echo "::group::gemini stderr"
-          cat .ai/gemini.err 2>/dev/null || echo "(no stderr file)"
-          echo "::endgroup::"
-
           if [ $rc -ne 0 ]; then
-            echo "::error::gemini exited with code $rc"
+            echo "::error::all Gemini attempts (CLI + REST fallback) failed"
             echo "::group::stdout tail"
-            tail -n 60 .ai/plan.md 2>/dev/null || tail -n 60 .ai/run.log 2>/dev/null || echo "(no stdout file)"
+            tail -n 60 "$OUT_FILE" 2>/dev/null || echo "(no stdout)"
             echo "::endgroup::"
             exit $rc
           fi

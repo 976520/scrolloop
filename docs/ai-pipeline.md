@@ -170,7 +170,7 @@ To enable the pipeline, a maintainer must:
 1. Create the labels listed in section 1.
 2. Add the following GitHub Actions secrets:
    - `GEMINI_API_KEY` — used by Gemini CLI inside `ai-dev.yml`. Get one from Google AI Studio (https://aistudio.google.com/apikey); free tier covers `gemini-2.5-flash`.
-   - (optional repo variable) `GEMINI_MODEL` — pin a non-default model, e.g. `gemini-2.5-pro`. Defaults to `gemini-2.5-flash`.
+   - (optional repo variable) `GEMINI_MODELS` — comma-separated fallback chain, e.g. `gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash-lite`. The workflow tries each in order on HTTP 429 (free-tier daily quota), then falls back to a direct Gemini REST API call for `plan` task types. Defaults to the chain above.
 3. Configure n8n with:
    - a GitHub App or PAT with `contents:write`, `pull_requests:write`, `issues:write`, `actions:write` (for `workflow_dispatch`),
    - webhook endpoints for `issues`, `issue_comment`, and `workflow_run`.
