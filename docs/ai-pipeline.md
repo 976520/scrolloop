@@ -111,15 +111,27 @@ Trigger: `check_run` or `workflow_run` with `conclusion=failure` on a PR branch.
 
 ---
 
-## 3. GitHub Actions workflow
+## 3. GitHub Actions workflow — 3-agent harness
 
-The workflow is defined in [`.github/workflows/ai-dev.yml`](../.github/workflows/ai-dev.yml).
+The workflow is defined in [`.github/workflows/ai-dev.yml`](../.github/workflows/ai-dev.yml) and split into three jobs that communicate via the `.harness/<issue_number>/` directory committed to the AI branch:
 
-- Trigger: `workflow_dispatch` only. It cannot be invoked by an issue/comment event directly.
-- Inputs: `issue_number`, `task_type`, `prompt`.
-- Branch: always `ai/issue-{issue_number}` cut from `develop`.
+| Job         | Role          | Reads                               | Writes                                         |
+| ----------- | ------------- | ----------------------------------- | ---------------------------------------------- |
+| `plan`      | **Planner**   | issue/PR context + repo (read-only) | `.harness/<n>/plan.md` (artifact + commit)     |
+| `implement` | **Generator** | `plan.md`                           | code edits, `.harness/<n>/plan.md` (commit)    |
+| `evaluate`  | **Evaluator** | `plan.md` + git diff vs develop     | `.harness/<n>/review.md` (commit + PR comment) |
+
+Key rules:
+
+- Trigger: `workflow_dispatch` only. Cannot be invoked by an issue/comment event directly.
+- Inputs: `issue_number`, `task_type`, `prompt`, optional `head_branch`.
+- Branch: `ai/issue-<issue_number>` by default; if `head_branch` is passed, that exact branch is updated (used by `/ai-apply-review`).
+- `task_type=plan` runs only the Planner; the PR contains only the plan markdown.
+- Any other `task_type` runs Planner + Generator + Evaluator in sequence. Generator commits code, Evaluator posts a verdict as a PR comment.
+- Evaluator can only return text; any incidental file edits the model attempts are reverted.
 - Target: PR is opened against `develop`, never `master`.
-- Permissions are scoped to `contents: write`, `pull-requests: write`, `issues: write`. The workflow has no `id-token` and no `NPM_TOKEN`, so it cannot publish.
+- Permissions scoped to `contents: write`, `pull-requests: write`, `issues: write`. No `id-token`, no `NPM_TOKEN`, so the workflow cannot publish.
+- Each Gemini call uses [`.github/actions/gemini`](../.github/actions/gemini/action.yml), a composite action that retries through a model fallback chain (`GEMINI_MODELS` variable) and, where allowed (`plan`/`evaluate` only), falls back to a direct REST API call when the CLI hits quota.
 
 ---
 
