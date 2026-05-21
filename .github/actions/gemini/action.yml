@@ -1,0 +1,130 @@
+name: 'Run Gemini with fallback'
+description: 'Run gemini-cli against a prompt file, with CLI model fallback and optional direct REST API fallback for plan-style read-only tasks.'
+
+inputs:
+  api_key:
+    description: 'Gemini API key (secret).'
+    required: true
+  prompt_file:
+    description: 'Path to a file containing the prompt to send.'
+    required: true
+  output_file:
+    description: 'Path to write Gemini stdout to.'
+    required: true
+  models:
+    description: 'Comma-separated fallback chain (CLI --model values).'
+    required: true
+  yolo:
+    description: 'If "true", pass --yolo so tool calls (file edits) auto-accept. Set "false" for analysis-only callers that should also fail-safe via prompt instruction.'
+    default: 'true'
+  allow_rest_fallback:
+    description: 'If "true", also try a direct Gemini REST API call when every CLI attempt fails. Useful for plan/eval phases that only need text output; pointless for phases that must edit files.'
+    default: 'false'
+
+outputs:
+  used_model:
+    description: 'The model that produced output, or empty if all attempts failed.'
+    value: ${{ steps.run.outputs.used_model }}
+  used_rest:
+    description: 'true if the REST fallback produced the output, false if CLI did.'
+    value: ${{ steps.run.outputs.used_rest }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install gemini-cli
+      shell: bash
+      run: |
+        if ! command -v gemini >/dev/null 2>&1; then
+          npm install -g @google/gemini-cli
+        fi
+        echo "::group::gemini version"
+        gemini --version || true
+        echo "::endgroup::"
+
+    - name: Run with fallback
+      id: run
+      shell: bash
+      env:
+        GEMINI_API_KEY: ${{ inputs.api_key }}
+        PROMPT_FILE: ${{ inputs.prompt_file }}
+        OUTPUT_FILE: ${{ inputs.output_file }}
+        MODELS_CSV: ${{ inputs.models }}
+        YOLO_FLAG: ${{ inputs.yolo == 'true' && '--yolo' || '' }}
+        ALLOW_REST: ${{ inputs.allow_rest_fallback }}
+        GEMINI_CLI_TRUST_WORKSPACE: 'true'
+      run: |
+        set -e
+        mkdir -p "$(dirname "$OUTPUT_FILE")" .ai
+
+        rc=1
+        used_model=""
+        used_rest="false"
+
+        IFS=',' read -ra MODELS <<< "$MODELS_CSV"
+        for model in "${MODELS[@]}"; do
+          model="$(echo "$model" | xargs)"
+          [ -z "$model" ] && continue
+          echo "::group::CLI attempt: $model"
+          set +e
+          gemini --model "$model" $YOLO_FLAG --prompt "$(cat "$PROMPT_FILE")" \
+            > "$OUTPUT_FILE" 2> .ai/gemini.err
+          rc=$?
+          set -e
+          echo "exit: $rc"
+          tail -n 20 .ai/gemini.err 2>/dev/null || true
+          echo "::endgroup::"
+
+          if [ $rc -eq 0 ]; then
+            used_model="$model"
+            echo "CLI succeeded with $model"
+            break
+          fi
+          if grep -qE 'TerminalQuotaError|Quota exceeded|"code": ?429|status: ?429' .ai/gemini.err 2>/dev/null; then
+            echo "::notice::$model hit quota; trying next"
+            continue
+          fi
+          echo "::warning::$model failed with non-quota error; stop CLI loop"
+          break
+        done
+
+        if [ $rc -ne 0 ] && [ "$ALLOW_REST" = "true" ]; then
+          echo "::notice::falling back to direct Gemini REST API"
+          for model in "${MODELS[@]}"; do
+            model="$(echo "$model" | xargs)"
+            [ -z "$model" ] && continue
+            echo "::group::REST attempt: $model"
+            body=$(jq -n --rawfile p "$PROMPT_FILE" '{contents:[{parts:[{text:$p}]}]}')
+            http_code=$(curl -sS -o .ai/rest.json -w '%{http_code}' \
+              "https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent" \
+              -H "x-goog-api-key: $GEMINI_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$body" || echo "000")
+            echo "HTTP $http_code"
+            if [ "$http_code" = "200" ]; then
+              text=$(jq -r '.candidates[0].content.parts[0].text // empty' .ai/rest.json)
+              if [ -n "$text" ]; then
+                printf '%s' "$text" > "$OUTPUT_FILE"
+                rc=0
+                used_model="$model"
+                used_rest="true"
+                echo "REST succeeded with $model"
+                echo "::endgroup::"
+                break
+              fi
+            fi
+            jq -r '.error.message // .' .ai/rest.json 2>/dev/null | head -3 || true
+            echo "::endgroup::"
+          done
+        fi
+
+        echo "used_model=$used_model" >> "$GITHUB_OUTPUT"
+        echo "used_rest=$used_rest" >> "$GITHUB_OUTPUT"
+
+        if [ $rc -ne 0 ]; then
+          echo "::error::all Gemini attempts (CLI${ALLOW_REST:+ + REST}) failed"
+          echo "::group::stdout tail"
+          tail -n 60 "$OUTPUT_FILE" 2>/dev/null || echo "(empty)"
+          echo "::endgroup::"
+          exit $rc
+        fi
