@@ -43,28 +43,72 @@ scrolloop은 직접 만든 windowing 기반 가상 스크롤 OSS. turborepo 모�
 
 ### 2. 시스템 아키텍처 — trust boundary 명시 설계
 
+**구조 한눈에**:
+
+```mermaid
+flowchart TD
+    Event["GitHub Event<br/>(issue · PR comment · workflow_run)"]
+
+    subgraph n8n["n8n — Tailscale Funnel HTTPS"]
+        direction TB
+        Recv["Webhook 수신"]
+        Filter["Label · Author · Bot 필터"]
+        Build["Prompt 합성"]
+        Recv --> Filter --> Build
+    end
+
+    subgraph gha["GitHub Actions — ephemeral 컨테이너"]
+        direction TB
+        Planner["Planner<br/>read-only<br/>→ plan.md"]
+        Generator["Generator<br/>code edits + verify<br/>→ commit + push"]
+        Evaluator["Evaluator<br/>plan vs diff<br/>→ review.md"]
+        Planner -- "plan.md (artifact)" --> Generator
+        Generator --> Evaluator
+    end
+
+    PR["Pull Request → develop<br/>(plan.md + 코드 변경 + review.md)"]
+
+    Event -- "HTTPS · HMAC 서명 검증" --> n8n
+    n8n -- "workflow_dispatch<br/>(GitHub PAT)" --> gha
+    gha --> PR
 ```
-GitHub Event (issue / PR comment / workflow_run)
-        │
-        ▼  (webhook over HTTPS, HMAC 서명 검증)
-┌────────────────────────────────────────────┐
-│  n8n   (Tailscale Funnel 공개 HTTPS)       │
-│  - 이벤트 수신                              │
-│  - 라벨 / 권한 / 봇 필터                    │
-│  - prompt 합성                              │
-│  - workflow_dispatch 호출                   │
-└────────────────────────────────────────────┘
-        │
-        ▼  (GitHub PAT, repo:write/actions:write)
-┌────────────────────────────────────────────┐
-│  GitHub Actions    (ephemeral 격리 컨테이너) │
-│  ─ Planner   → .harness/<n>/plan.md         │
-│  ─ Generator → code edits + verify          │
-│  ─ Evaluator → review.md + PR 코멘트         │
-└────────────────────────────────────────────┘
-        │
-        ▼
-   ai/issue-N branch  ──▶  Pull Request → develop
+
+**실행 흐름 (한 번의 dispatch)**:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 사용자
+    participant GH as GitHub
+    participant N8N as n8n
+    participant ACT as GitHub Actions
+
+    User->>GH: 이슈에 ai:ready + ai:fix 라벨
+    GH->>N8N: webhook (issues, action=labeled)
+
+    N8N->>N8N: 라벨 / 권한 / 봇 필터
+    Note over N8N: 통과해야만 진행
+    N8N->>N8N: prompt 합성
+    N8N->>GH: POST workflow_dispatch
+
+    GH->>ACT: ai-dev.yml 실행
+
+    Note over ACT: Job 1 · Planner
+    ACT->>ACT: gemini --prompt PLAN
+    ACT->>ACT: .harness/<n>/plan.md
+
+    Note over ACT: Job 2 · Generator
+    ACT->>ACT: plan.md 다운로드
+    ACT->>ACT: gemini --yolo IMPLEMENT
+    ACT->>ACT: typecheck · lint · test · build
+    ACT->>GH: push + gh pr create
+
+    Note over ACT: Job 3 · Evaluator
+    ACT->>ACT: diff vs develop
+    ACT->>ACT: gemini --prompt EVAL
+    ACT->>GH: review.md commit + PR 코멘트
+
+    GH-->>User: 자동 PR (plan + 코드 + review)
 ```
 
 | 시스템         | 책임                                                                  | 권한                                                              |
