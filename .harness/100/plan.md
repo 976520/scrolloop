@@ -1,9 +1,8 @@
-````markdown
 # Plan
 
 ## Goal
 
-The goal is to add a minimal smoke test for the `VirtualList` component in the React package. This test will verify that the component can be rendered without errors, ensuring basic functionality and preventing regressions from accidental breakages during future development.
+The goal is to implement a minimal smoke test for the `VirtualList` component within the `react` package. This test will ensure that the `VirtualList` can be rendered without errors and displays its basic content correctly, serving as a fundamental check for the component's integrity.
 
 ## Affected files
 
@@ -11,28 +10,30 @@ The goal is to add a minimal smoke test for the `VirtualList` component in the R
 
 ## Steps
 
-1.  Add a new test case to `packages/react/src/components/VirtualList.test.tsx` that renders the `VirtualList` component with minimal valid props.
-2.  Assert that the component is present in the document.
+1. Read the contents of `packages/react/src/components/VirtualList.test.tsx` to understand the existing testing patterns and imports.
+2. Add a new test block within `VirtualList.test.tsx` that describes the smoke test.
+3. Inside the new test, import the `VirtualList` component and any necessary testing utilities (e.g., `render`, `screen` from `@testing-library/react`).
+4. Render a `VirtualList` component with a simple set of data and minimal required props.
+5. Assert that the component renders successfully without throwing any errors.
+6. Assert that some unique content from the rendered items is present in the document to confirm that items are being displayed.
 
 ## Test plan
 
-- **Existing tests to run:**
-  - `pnpm test --filter @scrolloop/react` (to run all tests in the react package)
-- **New tests Generator should add:**
-  - `packages/react/src/components/VirtualList.test.tsx`: A new `it` block inside the `describe('VirtualList')` suite, verifying that the `VirtualList` component renders without errors. For example:
-    ```typescript
-    it('renders without crashing', () => {
-      render(<VirtualList count={10} itemSize={50} height={400} renderItem={(index) => <div data-testid={`item-${index}`}>Item {index}</div>} />);
-      expect(screen.getByTestId('item-0')).toBeInTheDocument();
-    });
-    ```
+- Existing tests to run:
+  - `packages/react/src/components/VirtualList.test.tsx`
+- New tests Generator should add:
+  - `packages/react/src/components/VirtualList.test.tsx`: A new `it` block titled "should render VirtualList without crashing and display items" that will:
+    - Mount a `VirtualList` component.
+    - Verify no errors are thrown during rendering.
+    - Confirm the presence of at least one list item's content using `screen.getByText`.
 
 ## Risks / unknowns
 
-- The current defaultProps in `VirtualList.test.tsx` use `data-testid` for items. I'll use that for the assertion in the smoke test instead of `getByRole('list')` for consistency.
+- The exact minimal props required to render `VirtualList` will need to be determined by inspecting the component or existing tests.
+- If there are no existing examples of `VirtualList` rendering in `VirtualList.test.tsx`, the Generator might need to infer the correct props from the component's source or common React patterns.
 
 ## Out of scope
 
-- Thorough testing of `VirtualList`'s virtualization logic, scrolling behavior, or performance.
-- Adding smoke tests for other frameworks or components. This is strictly a _minimal_ smoke test.
-````
+- Thorough testing of all `VirtualList` functionalities (e.g., virtualization logic, scrolling, dynamic item sizes, event handling).
+- Adding smoke tests for `InfiniteList` or other framework-specific implementations (e.g., `preact`, `vue`, `svelte`).
+- Performance or accessibility testing.
