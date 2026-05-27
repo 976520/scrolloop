@@ -20,6 +20,9 @@ inputs:
   allow_rest_fallback:
     description: 'If "true", also try a direct Gemini REST API call when every CLI attempt fails. Useful for plan/eval phases that only need text output; pointless for phases that must edit files.'
     default: 'false'
+  reset_between_attempts:
+    description: 'If "true", run `git reset --hard` + `git clean -fd -e .ai -e .harness` between CLI fallback attempts. Required for agentic (file-editing) callers so a partially-modified tree from a failed attempt does not leak into the next model''s context.'
+    default: 'false'
 
 outputs:
   used_model:
@@ -52,6 +55,7 @@ runs:
         MODELS_CSV: ${{ inputs.models }}
         YOLO_FLAG: ${{ inputs.yolo == 'true' && '--yolo' || '' }}
         ALLOW_REST: ${{ inputs.allow_rest_fallback }}
+        RESET_BETWEEN: ${{ inputs.reset_between_attempts }}
         GEMINI_CLI_TRUST_WORKSPACE: 'true'
       run: |
         set -e
@@ -61,10 +65,30 @@ runs:
         used_model=""
         used_rest="false"
 
+        # Snapshot the working tree state. Used to reset between fallback
+        # attempts when the caller is editing files (otherwise a quota-killed
+        # attempt leaves half-written files that confuse the next model).
+        initial_head=""
+        if [ "$RESET_BETWEEN" = "true" ]; then
+          initial_head=$(git rev-parse HEAD 2>/dev/null || echo "")
+          echo "::notice::reset_between_attempts=true (initial HEAD=$initial_head)"
+        fi
+
+        attempt=0
         IFS=',' read -ra MODELS <<< "$MODELS_CSV"
         for model in "${MODELS[@]}"; do
           model="$(echo "$model" | xargs)"
           [ -z "$model" ] && continue
+
+          # Before any retry (attempt > 0), restore the working tree to its
+          # pre-Gemini state so the next model starts from a clean slate.
+          if [ "$attempt" -gt 0 ] && [ -n "$initial_head" ]; then
+            echo "::notice::resetting working tree before retry"
+            git reset --hard "$initial_head" 2>/dev/null || true
+            git clean -fd -e .ai -e .harness 2>/dev/null || true
+          fi
+          attempt=$((attempt + 1))
+
           echo "::group::CLI attempt: $model"
           set +e
           gemini --model "$model" $YOLO_FLAG --prompt "$(cat "$PROMPT_FILE")" \
