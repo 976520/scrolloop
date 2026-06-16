@@ -86,6 +86,63 @@ function App() {
 }
 ```
 
+### Preact
+
+```tsx
+import { VirtualList } from "@scrolloop/preact";
+
+export function App() {
+  const items = Array.from({ length: 1000 }, (_, i) => `Item #${i}`);
+
+  return (
+    <VirtualList
+      count={items.length}
+      itemSize={50}
+      height={400}
+      renderItem={(index, style) => <div style={style}>{items[index]}</div>}
+    />
+  );
+}
+```
+
+### Vue
+
+```vue
+<script setup lang="ts">
+import { VirtualList } from "@scrolloop/vue";
+
+const items = Array.from({ length: 1000 }, (_, i) => `Item #${i}`);
+</script>
+
+<template>
+  <VirtualList :count="items.length" :item-size="50" :height="400">
+    <template #default="{ index, style }">
+      <div :style="style">{{ items[index] }}</div>
+    </template>
+  </VirtualList>
+</template>
+```
+
+### Svelte
+
+```svelte
+<script lang="ts">
+  import { VirtualList } from "@scrolloop/svelte";
+
+  const items = Array.from({ length: 1000 }, (_, i) => `Item #${i}`);
+</script>
+
+<VirtualList count={items.length} itemSize={50} height={400}>
+  {#snippet children(index, style)}
+    <div
+      style={`position: ${style.position}; top: ${style.top}; left: ${style.left}; right: ${style.right}; height: ${style.height};`}
+    >
+      {items[index]}
+    </div>
+  {/snippet}
+</VirtualList>
+```
+
 ### React Native
 
 ```tsx
@@ -99,6 +156,7 @@ function App() {
     <VirtualList
       count={items.length}
       itemSize={50}
+      height={400}
       renderItem={(index, style) => (
         <View key={index} style={style}>
           <Text>{items[index]}</Text>
