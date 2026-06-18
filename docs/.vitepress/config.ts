@@ -1,4 +1,12 @@
 import { defineConfig } from "vitepress";
+import fs from "node:fs";
+import path from "node:path";
+
+const SITE_URL = "https://976520.github.io/scrolloop";
+
+function stripFrontmatter(content: string): string {
+  return content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "");
+}
 
 export default defineConfig({
   title: "scrolloop",
@@ -7,6 +15,39 @@ export default defineConfig({
   appearance: false,
 
   base: "/scrolloop/",
+
+  async buildEnd(siteConfig) {
+    const { srcDir, outDir, pages } = siteConfig;
+
+    const fullParts: string[] = [];
+
+    for (const page of pages) {
+      if (!page.startsWith("guide/")) continue;
+
+      const srcPath = path.join(srcDir, page);
+      if (!fs.existsSync(srcPath)) continue;
+
+      const raw = fs.readFileSync(srcPath, "utf-8");
+      const body = stripFrontmatter(raw).trim();
+      if (!body) continue;
+
+      const destPath = path.join(outDir, page);
+      fs.mkdirSync(path.dirname(destPath), { recursive: true });
+      fs.writeFileSync(destPath, raw);
+
+      const url = `${SITE_URL}/${page.replace(/\.md$/, "")}`;
+      fullParts.push(`# Source: ${url}\n\n${body}`);
+    }
+
+    const header =
+      "# scrolloop — full documentation\n\n" +
+      "> Modern virtual and infinite scrolling components for React, " +
+      "React Native, Preact, Vue, and Svelte.\n";
+    fs.writeFileSync(
+      path.join(outDir, "llms-full.txt"),
+      `${header}\n${fullParts.join("\n\n---\n\n")}\n`
+    );
+  },
 
   head: [
     ["link", { rel: "icon", href: "/favicon.svg" }],
