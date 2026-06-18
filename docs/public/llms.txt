@@ -1,0 +1,33 @@
+# scrolloop
+
+> Modern virtual and infinite scrolling components for React, React Native, Preact, Vue, and Svelte. scrolloop uses windowing to render only the items visible in the viewport, keeping large lists fast while exposing the same API for fixed-height virtual lists and page-based infinite loading.
+
+scrolloop is a monorepo of framework adapters built on a platform-independent virtualization core:
+
+- `@scrolloop/core`: platform-independent virtualization logic
+- `@scrolloop/shared`: infinite-loading state management and shared utilities
+- `@scrolloop/react`: React components (`VirtualList`, `InfiniteList`)
+- `@scrolloop/react-native`: React Native components
+- `@scrolloop/preact`: Preact components and hooks
+- `@scrolloop/vue`: Vue 3 components and composables
+- `@scrolloop/svelte`: Svelte 5 components and stores
+
+## Guide
+
+- [Introduction](https://976520.github.io/scrolloop/guide/introduction): What scrolloop is, why virtual scrolling matters, and the packages available.
+- [Quick start](https://976520.github.io/scrolloop/guide/quick-start): Build a windowing list in about a minute with a minimal React example.
+- [Concepts](https://976520.github.io/scrolloop/guide/concepts): How windowing, overscan, and absolute positioning let scrolloop render tens of thousands of items without performance loss.
+
+## Components
+
+- [VirtualList](https://976520.github.io/scrolloop/guide/virtual-list): The core high-performance list component, with per-runtime usage and props (`count`, `itemSize`, `height`, `renderItem`).
+- [InfiniteList](https://976520.github.io/scrolloop/guide/infinite-list): Combines data fetching with virtualization for page-based infinite scrolling (`fetchPage`, `pageSize`, `itemSize`, `renderItem`).
+
+## Advanced
+
+- [SSR Guide](https://976520.github.io/scrolloop/guide/ssr): Server-side rendering support for `@scrolloop/react`'s `InfiniteList`, using `isServerSide` and initial data to improve initial load and SEO (React DOM adapter only).
+
+## Optional
+
+- [GitHub repository](https://github.com/976520/scrolloop): Source code, issues, and contribution workflow.
+- [README](https://github.com/976520/scrolloop#readme): Installation commands for each framework package.
