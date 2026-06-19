@@ -3,6 +3,7 @@
   import type { Snippet } from "svelte";
   import { createInfinitePages } from "./stores/createInfinitePages";
   import VirtualList from "./VirtualList.svelte";
+  import { findMissingPages } from "@scrolloop/shared";
   import type { InfiniteSourceOptions } from "@scrolloop/shared";
 
   interface Props {
