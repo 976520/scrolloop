@@ -103,7 +103,7 @@ importers:
         version: 5.44.0
       tsdown:
         specifier: 0.22.3
-        version: 0.22.3(@arethetypeswrong/core@0.18.3)(oxc-resolver@11.21.3)(publint@0.3.21)(tsx@4.20.6)(typescript@5.9.3)
+        version: 0.22.3(@arethetypeswrong/core@0.18.3)(@tsdown/css@0.22.3)(oxc-resolver@11.21.3)(publint@0.3.21)(tsx@4.20.6)(typescript@5.9.3)(unrun@0.3.1)
       tsup:
         specifier: ^8.0.0
         version: 8.5.0(@microsoft/api-extractor@7.57.7(@types/node@24.10.0))(jiti@2.7.0)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.9.0)
@@ -116,6 +116,9 @@ importers:
       typescript-eslint:
         specifier: 8.61.1
         version: 8.61.1(eslint@10.5.0(jiti@2.7.0))(typescript@5.9.3)
+      unrun:
+        specifier: ^0.3.1
+        version: 0.3.1
       vitepress:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.46.1)(@types/node@24.10.0)(@types/react@18.3.26)(axios@1.13.2)(lightningcss@1.32.0)(postcss@8.5.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(terser@5.44.0)(typescript@5.9.3)
@@ -153,6 +156,9 @@ importers:
         specifier: workspace:*
         version: link:../shared
     devDependencies:
+      '@tsdown/css':
+        specifier: ^0.22.3
+        version: 0.22.3(jiti@2.7.0)(postcss@8.5.15)(tsdown@0.22.3)(tsx@4.20.6)(yaml@2.9.0)
       preact:
         specifier: ^10.0.0
         version: 10.28.0
@@ -2814,6 +2820,28 @@ packages:
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
+
+  '@tsdown/css@0.22.3':
+    resolution: {integrity: sha512-kmb/31lcI/Pk26WeWJxQDLy8qkvoyfBkw3n9aN6bflKkoeLqnV2BRbndzfPRJY+Ziahi796gfgDVc+ftLIgWVw==}
+    engines: {node: ^22.18.0 || >=24.11.0}
+    peerDependencies:
+      postcss: ^8.4.0
+      postcss-import: ^16.0.0
+      postcss-modules: ^6.0.0
+      sass: '*'
+      sass-embedded: '*'
+      tsdown: 0.22.3
+    peerDependenciesMeta:
+      postcss:
+        optional: true
+      postcss-import:
+        optional: true
+      postcss-modules:
+        optional: true
+      sass:
+        optional: true
+      sass-embedded:
+        optional: true
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
@@ -6850,6 +6878,16 @@ packages:
     resolution: {integrity: sha512-0Mqk3AT2TZCXWKdcoaufeXNukv2mTrEZExeXlHIOZXdqYoHHr4n51pymnwV8x2BOVxwXbK2HLlI7usrqMpycdg==}
     engines: {node: ^20.19.0 || >=22.12.0}
 
+  unrun@0.3.1:
+    resolution: {integrity: sha512-onIck/oNnCaytwths1ZVp1LK2Gq2hPoyFhiHebObuUXqR3S0uHuLLaBK8K6mRRgV7Ptip8AnNvaUsgzwWwBZuA==}
+    engines: {node: ^22.13.0 || >=24.0.0}
+    hasBin: true
+    peerDependencies:
+      synckit: ^0.11.11
+    peerDependenciesMeta:
+      synckit:
+        optional: true
+
   update-browserslist-db@1.1.4:
     resolution: {integrity: sha512-q0SPT4xyU84saUX+tomz1WLkxUbuaJnR1xWt17M7fJtEJigJeWUNGUqrauFXsHnqev9y9JTRGwk13tFBuKby4A==}
     hasBin: true
@@ -9660,6 +9698,19 @@ snapshots:
   '@testing-library/user-event@14.6.1(@testing-library/dom@9.3.4)':
     dependencies:
       '@testing-library/dom': 9.3.4
+
+  '@tsdown/css@0.22.3(jiti@2.7.0)(postcss@8.5.15)(tsdown@0.22.3)(tsx@4.20.6)(yaml@2.9.0)':
+    dependencies:
+      lightningcss: 1.32.0
+      postcss-load-config: 6.0.1(jiti@2.7.0)(postcss@8.5.15)(tsx@4.20.6)(yaml@2.9.0)
+      rolldown: 1.1.2
+      tsdown: 0.22.3(@arethetypeswrong/core@0.18.3)(@tsdown/css@0.22.3)(oxc-resolver@11.21.3)(publint@0.3.21)(tsx@4.20.6)(typescript@5.9.3)(unrun@0.3.1)
+    optionalDependencies:
+      postcss: 8.5.15
+    transitivePeerDependencies:
+      - jiti
+      - tsx
+      - yaml
 
   '@tybys/wasm-util@0.10.2':
     dependencies:
@@ -14251,7 +14302,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  tsdown@0.22.3(@arethetypeswrong/core@0.18.3)(oxc-resolver@11.21.3)(publint@0.3.21)(tsx@4.20.6)(typescript@5.9.3):
+  tsdown@0.22.3(@arethetypeswrong/core@0.18.3)(@tsdown/css@0.22.3)(oxc-resolver@11.21.3)(publint@0.3.21)(tsx@4.20.6)(typescript@5.9.3)(unrun@0.3.1):
     dependencies:
       ansis: 4.3.1
       cac: 7.0.0
@@ -14270,9 +14321,11 @@ snapshots:
       unconfig-core: 7.5.0
     optionalDependencies:
       '@arethetypeswrong/core': 0.18.3
+      '@tsdown/css': 0.22.3(jiti@2.7.0)(postcss@8.5.15)(tsdown@0.22.3)(tsx@4.20.6)(yaml@2.9.0)
       publint: 0.3.21
       tsx: 4.20.6
       typescript: 5.9.3
+      unrun: 0.3.1
     transitivePeerDependencies:
       - '@ts-macro/tsc'
       - '@typescript/native-preview'
@@ -14535,6 +14588,10 @@ snapshots:
       '@jridgewell/remapping': 2.3.5
       picomatch: 4.0.4
       webpack-virtual-modules: 0.6.2
+
+  unrun@0.3.1:
+    dependencies:
+      rolldown: 1.1.2
 
   update-browserslist-db@1.1.4(browserslist@4.27.0):
     dependencies:
