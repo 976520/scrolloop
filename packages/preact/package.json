@@ -38,7 +38,6 @@
   "devDependencies": {
     "@tsdown/css": "^0.22.3",
     "preact": "^10.0.0",
-    "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
   "license": "MIT"
