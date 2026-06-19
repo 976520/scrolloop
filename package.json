@@ -34,6 +34,10 @@
     "README.md"
   ],
   "lint-staged": {
+    "packages/**/*.{js,jsx,ts,tsx,vue,svelte}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
     "*.{js,jsx,ts,tsx,json,css,scss,md}": [
       "prettier --write"
     ]
@@ -46,7 +50,11 @@
     "test:ssr": "pnpm --filter @scrolloop/react test:ssr",
     "test:e2e": "pnpm --filter @scrolloop/react test:e2e",
     "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:fast": "oxlint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -88,7 +96,6 @@
     "eslint": "10.5.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-oxlint": "1.70.0",
-    "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-svelte": "3.19.0",
     "eslint-plugin-vue": "10.9.2",

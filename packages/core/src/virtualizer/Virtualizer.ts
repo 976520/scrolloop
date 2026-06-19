@@ -88,7 +88,7 @@ export class Virtualizer {
       this.#layoutStrategy.getVirtualSize?.(this.#count) ?? totalSize;
     const isClamped = virtualSize > totalSize;
 
-    let visibleRange = this.#layoutStrategy.getVisibleRange(
+    const visibleRange = this.#layoutStrategy.getVisibleRange(
       scrollOffset,
       viewportSize,
       this.#count
