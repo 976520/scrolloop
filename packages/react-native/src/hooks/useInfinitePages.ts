@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
-import { InfiniteSource } from "../InfiniteSource";
+import { InfiniteSource } from "@scrolloop/shared";
 import type {
   InfiniteSourceState,
   InfiniteSourceOptions,
-} from "../InfiniteSource";
+} from "@scrolloop/shared";
 
 export function useInfinitePages<T>(
   options: InfiniteSourceOptions<T>
