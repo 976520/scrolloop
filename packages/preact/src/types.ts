@@ -1,8 +1,6 @@
 import type { CSSProperties, VNode } from "preact";
 import type { PageResponse, Range } from "@scrolloop/shared";
 
-export type { PageResponse, Range };
-
 export interface VirtualListProps {
   count: number;
   itemSize: number;

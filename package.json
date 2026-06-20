@@ -14,17 +14,27 @@
   "packageManager": "pnpm@10.20.0",
   "main": "./packages/react/dist/index.cjs",
   "module": "./packages/react/dist/index.mjs",
-  "types": "./packages/react/dist/index.d.ts",
+  "types": "./packages/react/dist/index.d.cts",
   "exports": {
     ".": {
-      "types": "./packages/react/dist/index.d.ts",
-      "import": "./packages/react/dist/index.mjs",
-      "require": "./packages/react/dist/index.cjs"
+      "import": {
+        "types": "./packages/react/dist/index.d.mts",
+        "default": "./packages/react/dist/index.mjs"
+      },
+      "require": {
+        "types": "./packages/react/dist/index.d.cts",
+        "default": "./packages/react/dist/index.cjs"
+      }
     },
     "./native": {
-      "types": "./packages/react-native/dist/index.d.ts",
-      "import": "./packages/react-native/dist/index.mjs",
-      "require": "./packages/react-native/dist/index.cjs"
+      "import": {
+        "types": "./packages/react-native/dist/index.d.mts",
+        "default": "./packages/react-native/dist/index.mjs"
+      },
+      "require": {
+        "types": "./packages/react-native/dist/index.d.cts",
+        "default": "./packages/react-native/dist/index.cjs"
+      }
     }
   },
   "sideEffects": false,
@@ -55,6 +65,11 @@
     "lint:fast": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "knip": "knip",
+    "knip:production": "knip --production --strict",
+    "lint:publint": "publint",
+    "lint:attw": "attw --pack . --profile node16",
+    "lint:package": "pnpm run lint:publint && pnpm run lint:attw",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -119,6 +134,7 @@
     "vitepress": "^1.6.4",
     "vitest": "^2.0.0",
     "vue": "^3.5.26",
-    "vue-eslint-parser": "10.4.1"
+    "vue-eslint-parser": "10.4.1",
+    "vue-tsc": "^2.2.12"
   }
 }
