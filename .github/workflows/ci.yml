@@ -145,13 +145,14 @@ jobs:
       - name: E2E
         run: pnpm --filter @scrolloop/react test:e2e
 
-  publish:
+  release:
     needs: [ci, e2e]
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: write # changesets/action creates the "Version Packages" PR + tags
+      pull-requests: write
+      id-token: write # npm provenance (OIDC)
     steps:
       - uses: actions/checkout@v5
         with:
@@ -168,34 +169,16 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
 
-      - name: Decide publish
-        id: decide_publish
-        run: |
-          set -e
-          PKG_NAME=$(jq -r .name package.json)
-          PKG_VERSION=$(jq -r .version package.json)
-
-          echo "name=$PKG_NAME" >> $GITHUB_OUTPUT
-          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
-
-          PUBLISHED=$(npm view "${PKG_NAME}@${PKG_VERSION}" version || true)
-          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
-            echo "publish=false" >> $GITHUB_OUTPUT
-          else
-            echo "publish=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Show publish decision
-        run: |
-          echo "Package: ${{ steps.decide_publish.outputs.name }}"
-          echo "Version: ${{ steps.decide_publish.outputs.version }}"
-          echo "Will publish: ${{ steps.decide_publish.outputs.publish }}"
-
-      - name: Publish to npm
-        if: steps.decide_publish.outputs.publish == 'true'
+      # When changesets exist on master: opens/updates a "Version Packages" PR
+      # (runs `pnpm version`). When that PR merges and versions are bumped:
+      # publishes the scoped packages to npm with provenance (runs `pnpm release`).
+      - name: Changesets release
+        uses: changesets/action@v1
+        with:
+          version: pnpm run version
+          publish: pnpm run release
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          pnpm publish --access public --no-git-checks
+          NPM_CONFIG_PROVENANCE: "true"
