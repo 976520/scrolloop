@@ -1,21 +1,36 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env.*local"],
+  "globalDependencies": ["**/.env.*local", "tsconfig.json", "pnpm-lock.yaml"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**", "package.json", "tsup.config.ts"],
+      "inputs": [
+        "src/**",
+        "package.json",
+        "tsconfig.json",
+        "tsdown.config.ts",
+        "vite.config.ts"
+      ],
       "outputs": ["dist/**"]
     },
     "test": {
       "dependsOn": ["build"],
-      "outputs": []
-    },
-    "lint": {
-      "outputs": []
+      "inputs": [
+        "src/**",
+        "vitest.config.*",
+        "vitest.setup.ts",
+        "package.json"
+      ],
+      "outputs": ["coverage/**"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
+      "outputs": []
+    },
+    "size": {
+      "dependsOn": ["build"],
+      "inputs": ["dist/**", ".size-limit.json", "package.json"],
       "outputs": []
     },
     "dev": {

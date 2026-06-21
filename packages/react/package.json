@@ -29,7 +29,8 @@
     "test:watch": "vitest",
     "test:ssr": "vitest run src/__tests__/ssr/ssr.test.ts",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "size": "size-limit"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

@@ -16,7 +16,8 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "sideEffects": false,
   "files": [
@@ -24,7 +25,8 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "size": "size-limit"
   },
   "peerDependencies": {
     "vue": ">=3.3.0"

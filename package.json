@@ -67,6 +67,7 @@
     "format:check": "prettier --check .",
     "knip": "knip",
     "knip:production": "knip --production --strict",
+    "size": "turbo run size",
     "lint:publint": "publint",
     "lint:attw": "attw --pack . --profile node16",
     "lint:package": "pnpm run lint:publint && pnpm run lint:attw",

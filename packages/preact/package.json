@@ -16,7 +16,8 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "sideEffects": [
     "**/*.css"
@@ -26,7 +27,8 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "size": "size-limit"
   },
   "peerDependencies": {
     "preact": ">=10.0.0"

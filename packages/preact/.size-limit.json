@@ -1,0 +1,7 @@
+[
+  {
+    "name": "preact (ESM)",
+    "path": "dist/index.mjs",
+    "limit": "2.1 kB"
+  }
+]

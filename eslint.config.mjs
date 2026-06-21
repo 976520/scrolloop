@@ -14,6 +14,7 @@ export default tseslint.config(
       "**/dist/**",
       "**/coverage/**",
       "**/*.d.ts",
+      "**/*.timestamp-*.mjs",
       "**/node_modules/**",
       "docs/.vitepress/cache/**",
       "docs/.vitepress/dist/**",

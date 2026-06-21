@@ -1,0 +1,7 @@
+[
+  {
+    "name": "react (ESM)",
+    "path": "dist/index.mjs",
+    "limit": "4 kB"
+  }
+]

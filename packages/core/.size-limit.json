@@ -1,0 +1,7 @@
+[
+  {
+    "name": "core (ESM)",
+    "path": "dist/index.mjs",
+    "limit": "1.4 kB"
+  }
+]
