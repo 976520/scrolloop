@@ -3,6 +3,12 @@ export interface Range {
   endIndex: number;
 }
 
+export interface PageResponse<T> {
+  items: T[];
+  total: number;
+  hasMore: boolean;
+}
+
 export interface VirtualRange {
   startIndex: number;
   endIndex: number;

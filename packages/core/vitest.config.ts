@@ -1,12 +1,6 @@
 import { defineConfig } from "vitest/config";
-import path from "path";
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      "@scrolloop/shared": path.resolve(__dirname, "../shared/src"),
-    },
-  },
   test: {
     globals: true,
     setupFiles: ["./vitest.setup.ts"],

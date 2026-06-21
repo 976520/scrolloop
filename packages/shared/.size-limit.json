@@ -1,7 +1,0 @@
-[
-  {
-    "name": "shared (ESM)",
-    "path": "dist/index.mjs",
-    "limit": "0.8 kB"
-  }
-]

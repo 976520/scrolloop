@@ -11,7 +11,7 @@ export default defineConfig({
       fileName: (format) => `index.${format === "es" ? "mjs" : "cjs"}`,
     },
     rollupOptions: {
-      external: [/^svelte($|\/)/, "@scrolloop/core", "@scrolloop/shared"],
+      external: [/^svelte($|\/)/, "@scrolloop/core"],
     },
   },
 });

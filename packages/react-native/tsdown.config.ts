@@ -10,5 +10,5 @@ export default defineConfig({
   sourcemap: false,
   fixedExtension: true,
   external: ["react", "react-native"],
-  noExternal: ["@scrolloop/core", "@scrolloop/shared"],
+  noExternal: ["@scrolloop/core"],
 });

@@ -10,6 +10,6 @@ export default defineConfig({
   minify: true,
   sourcemap: false,
   fixedExtension: true,
-  external: ["vue", "@scrolloop/core", "@scrolloop/shared"],
+  external: ["vue", "@scrolloop/core"],
   plugins: [Vue({ isProduction: true })],
 });

@@ -1,7 +1,8 @@
-d<script setup lang="ts" generic="T">
+d
+<script setup lang="ts" generic="T">
 import { computed, onMounted } from "vue";
-import { findMissingPages } from "@scrolloop/shared";
-import type { PageResponse, Range } from "@scrolloop/shared";
+import { findMissingPages } from "@scrolloop/core";
+import type { PageResponse, Range } from "@scrolloop/core";
 import VirtualList from "./VirtualList.vue";
 import { useInfinitePages } from "../composables/useInfinitePages";
 
@@ -54,7 +55,12 @@ function handleRangeChange(range: Range) {
     ((range.endIndex / props.pageSize) | 0) +
     props.prefetchThreshold +
     Math.ceil(overscan.value / props.pageSize);
-  const missingPages = findMissingPages(ps, pe, pages.value, loadingPages.value);
+  const missingPages = findMissingPages(
+    ps,
+    pe,
+    pages.value,
+    loadingPages.value
+  );
   for (const p of missingPages) loadPage(p);
 }
 </script>
@@ -99,7 +105,11 @@ function handleRangeChange(range: Range) {
     >
       <template #default="{ index, style }">
         <slot
-          :item="pages.get(Math.floor(index / props.pageSize))?.[index % props.pageSize]"
+          :item="
+            pages.get(Math.floor(index / props.pageSize))?.[
+              index % props.pageSize
+            ]
+          "
           :index="index"
           :style="style"
         />

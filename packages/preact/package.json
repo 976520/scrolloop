@@ -34,8 +34,7 @@
     "preact": ">=10.0.0"
   },
   "dependencies": {
-    "@scrolloop/core": "workspace:*",
-    "@scrolloop/shared": "workspace:*"
+    "@scrolloop/core": "workspace:*"
   },
   "devDependencies": {
     "@tsdown/css": "^0.22.3",

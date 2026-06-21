@@ -27,7 +27,14 @@
   const totalHeight = $derived(count * itemSize);
 
   const range = $derived(
-    calculateVirtualRange(scrollTop, height, itemSize, count, overscan, prevScrollTop)
+    calculateVirtualRange(
+      scrollTop,
+      height,
+      itemSize,
+      count,
+      overscan,
+      prevScrollTop
+    )
   );
 
   const virtualItems = $derived.by(() => {
@@ -48,7 +55,10 @@
   });
 
   $effect(() => {
-    onRangeChange?.({ startIndex: range.renderStart, endIndex: range.renderEnd });
+    onRangeChange?.({
+      startIndex: range.renderStart,
+      endIndex: range.renderEnd,
+    });
   });
 
   $effect(() => {
@@ -76,7 +86,11 @@
   style:height="{height}px"
   style:position="relative"
 >
-  <div style:position="relative" style:height="{totalHeight}px" style:width="100%">
+  <div
+    style:position="relative"
+    style:height="{totalHeight}px"
+    style:width="100%"
+  >
     {#each virtualItems as item (item.index)}
       <div role="listitem">
         {@render children(item.index, item.style)}

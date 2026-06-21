@@ -3,8 +3,8 @@
   import type { Snippet } from "svelte";
   import { createInfinitePages } from "./stores/createInfinitePages";
   import VirtualList from "./VirtualList.svelte";
-  import { findMissingPages } from "@scrolloop/shared";
-  import type { InfiniteSourceOptions } from "@scrolloop/shared";
+  import { findMissingPages } from "@scrolloop/core";
+  import type { InfiniteSourceOptions } from "@scrolloop/core";
 
   interface Props {
     fetchPage: InfiniteSourceOptions<T>["fetchPage"];
@@ -14,7 +14,9 @@
     itemSize: number;
     height?: number;
     overscan?: number;
-    children: Snippet<[index: number, item: T | undefined, style: Record<string, string>]>;
+    children: Snippet<
+      [index: number, item: T | undefined, style: Record<string, string>]
+    >;
     error?: Snippet<[err: Error, retry: () => void]>;
     loading?: Snippet;
     empty?: Snippet;
@@ -70,7 +72,9 @@
       <div class="scrolloop-error-content">
         <p class="scrolloop-error-message">Error.</p>
         <p class="scrolloop-error-detail">{errorState.message}</p>
-        <button class="scrolloop-retry-button" onclick={source.retry}>Retry</button>
+        <button class="scrolloop-retry-button" onclick={source.retry}
+          >Retry</button
+        >
       </div>
     </div>
   {/if}
@@ -99,7 +103,11 @@
     onRangeChange={handleRangeChange}
   >
     {#snippet children(index, style)}
-      {@render children(index, pages.get(Math.floor(index / pageSize))?.[index % pageSize], style)}
+      {@render children(
+        index,
+        pages.get(Math.floor(index / pageSize))?.[index % pageSize],
+        style
+      )}
     {/snippet}
   </VirtualList>
 {/if}

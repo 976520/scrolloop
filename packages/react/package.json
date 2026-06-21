@@ -37,8 +37,7 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "@scrolloop/core": "workspace:*",
-    "@scrolloop/shared": "workspace:*"
+    "@scrolloop/core": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

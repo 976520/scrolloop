@@ -1,7 +1,7 @@
 import { ref, computed, watch, toValue, onUnmounted } from "vue";
 import type { MaybeRefOrGetter } from "vue";
-import { InfiniteSource } from "@scrolloop/shared";
-import type { InfiniteSourceOptions } from "@scrolloop/shared";
+import { InfiniteSource } from "@scrolloop/core";
+import type { InfiniteSourceOptions } from "@scrolloop/core";
 
 export function useInfinitePages<T>(
   options: MaybeRefOrGetter<InfiniteSourceOptions<T>>

@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "preact/hooks";
-import { InfiniteSource } from "@scrolloop/shared";
+import { InfiniteSource } from "@scrolloop/core";
 import type {
   InfiniteSourceState,
   InfiniteSourceOptions,
-} from "@scrolloop/shared";
+} from "@scrolloop/core";
 
 export function useInfinitePages<T>(options: InfiniteSourceOptions<T>) {
   const { fetchPage, pageSize, initialPage, onPageLoad, onError } = options;

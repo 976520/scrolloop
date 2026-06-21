@@ -35,8 +35,7 @@
     "react-native": ">=0.70.0"
   },
   "dependencies": {
-    "@scrolloop/core": "workspace:*",
-    "@scrolloop/shared": "workspace:*"
+    "@scrolloop/core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

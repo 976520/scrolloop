@@ -20,8 +20,8 @@ export interface InfiniteSourceOptions<T> {
 
 export class InfiniteSource<T> {
   private fetchPage: (page: number, size: number) => Promise<PageResponse<T>>;
-  private onPageLoad?: (page: number, items: T[]) => void;
-  private onError?: (error: Error) => void;
+  private onPageLoad: ((page: number, items: T[]) => void) | undefined;
+  private onError: ((error: Error) => void) | undefined;
 
   readonly pageSize: number;
   readonly initialPage: number;

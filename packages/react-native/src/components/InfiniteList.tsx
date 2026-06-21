@@ -2,7 +2,7 @@ import { useEffect, memo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import type { InfiniteListProps, Range } from "../types";
 import { VirtualList } from "./VirtualList";
-import { findMissingPages } from "@scrolloop/shared";
+import { findMissingPages } from "@scrolloop/core";
 import { useInfinitePages } from "../hooks/useInfinitePages";
 
 function InfiniteListInner<T>(props: InfiniteListProps<T>) {
