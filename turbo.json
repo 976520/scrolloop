@@ -33,6 +33,11 @@
       "inputs": ["dist/**", ".size-limit.json", "package.json"],
       "outputs": []
     },
+    "lint:package": {
+      "dependsOn": ["build"],
+      "inputs": ["dist/**", "package.json"],
+      "outputs": []
+    },
     "dev": {
       "cache": false,
       "persistent": true

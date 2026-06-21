@@ -3,14 +3,12 @@
   "version": "0.1.0",
   "description": "Svelte 5 adapter for @scrolloop/core",
   "type": "module",
-  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs"
     },
     "./style.css": "./dist/style.css"
   },
@@ -22,7 +20,10 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
-    "size": "size-limit"
+    "size": "size-limit",
+    "lint:publint": "publint --strict",
+    "lint:attw": "attw --pack --profile esm-only --exclude-entrypoints ./style.css --ignore-rules internal-resolution-error",
+    "lint:package": "pnpm run lint:publint && pnpm run lint:attw"
   },
   "peerDependencies": {
     "svelte": ">=5.0.0"

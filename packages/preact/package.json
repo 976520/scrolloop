@@ -28,7 +28,10 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "size": "size-limit"
+    "size": "size-limit",
+    "lint:publint": "publint --strict",
+    "lint:attw": "attw --pack --profile node16 --exclude-entrypoints ./style.css",
+    "lint:package": "pnpm run lint:publint && pnpm run lint:attw"
   },
   "peerDependencies": {
     "preact": ">=10.0.0"

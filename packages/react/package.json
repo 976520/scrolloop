@@ -30,7 +30,10 @@
     "test:ssr": "vitest run src/__tests__/ssr/ssr.test.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "size": "size-limit"
+    "size": "size-limit",
+    "lint:publint": "publint --strict",
+    "lint:attw": "attw --pack --profile node16",
+    "lint:package": "pnpm run lint:publint && pnpm run lint:attw"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
