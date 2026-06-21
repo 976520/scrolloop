@@ -26,9 +26,13 @@ On push to `master`, the `release` job runs `changesets/action`:
 
 ### One-time setup
 
-- Add an `NPM_TOKEN` repo secret (granular automation token with publish rights
-  to the `scrolloop` package and the `@scrolloop` scope), or configure npm
-  **Trusted Publishing** (OIDC) per package — `release` already has `id-token: write`.
+- The `NPM_TOKEN` repo secret already exists (the previous publish flow used it).
+  Before the first scoped release, **verify it can publish the new `@scrolloop`
+  scope** — the old flow only published the single `scrolloop` package, so a
+  package-scoped/granular token may need the `@scrolloop` scope (and its org)
+  granted. A classic automation token covers everything you own.
+  (Alternatively, configure npm **Trusted Publishing** (OIDC) per package —
+  `release` already has `id-token: write`.)
 - First release: package versions are set directly to `1.0.0` (no changeset),
   so `changesets/action` publishes them on the first master push. `scrolloop`
   goes `0.5.2 → 1.0.0`; the `@scrolloop/*` adapters are published fresh at
