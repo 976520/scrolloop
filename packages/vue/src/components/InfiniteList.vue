@@ -1,4 +1,3 @@
-d
 <script setup lang="ts" generic="T">
 import { computed, onMounted } from "vue";
 import { findMissingPages } from "scrolloop";
