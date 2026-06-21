@@ -9,5 +9,5 @@ export default defineConfig({
   minify: true,
   sourcemap: false,
   fixedExtension: true,
-  external: ["react", "react-native", "@scrolloop/core"],
+  external: ["react", "react-native", "scrolloop"],
 });

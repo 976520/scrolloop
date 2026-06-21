@@ -1,5 +1,5 @@
 import type { CSSProperties, VNode } from "preact";
-import type { PageResponse, Range } from "@scrolloop/core";
+import type { PageResponse, Range } from "scrolloop";
 
 export interface VirtualListProps {
   count: number;

@@ -1,7 +1,7 @@
 {
   "name": "@scrolloop/preact",
-  "version": "0.1.0",
-  "description": "Preact adapter for @scrolloop/core",
+  "version": "1.0.0",
+  "description": "Preact adapter for scrolloop",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -37,7 +37,7 @@
     "preact": ">=10.0.0"
   },
   "dependencies": {
-    "@scrolloop/core": "workspace:*"
+    "scrolloop": "workspace:*"
   },
   "devDependencies": {
     "@tsdown/css": "^0.22.3",

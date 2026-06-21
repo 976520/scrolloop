@@ -1,8 +1,8 @@
 d
 <script setup lang="ts" generic="T">
 import { computed, onMounted } from "vue";
-import { findMissingPages } from "@scrolloop/core";
-import type { PageResponse, Range } from "@scrolloop/core";
+import { findMissingPages } from "scrolloop";
+import type { PageResponse, Range } from "scrolloop";
 import VirtualList from "./VirtualList.vue";
 import { useInfinitePages } from "../composables/useInfinitePages";
 

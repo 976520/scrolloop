@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { calculateVirtualRange } from "@scrolloop/core";
-import type { Range } from "@scrolloop/core";
+import { calculateVirtualRange } from "scrolloop";
+import type { Range } from "scrolloop";
 
 const props = withDefaults(
   defineProps<{

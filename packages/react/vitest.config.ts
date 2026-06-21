@@ -4,7 +4,7 @@ import path from "path";
 export default defineConfig({
   resolve: {
     alias: {
-      "@scrolloop/core": path.resolve(__dirname, "../core/src"),
+      scrolloop: path.resolve(__dirname, "../core/src"),
     },
   },
   test: {

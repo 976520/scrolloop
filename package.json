@@ -1,11 +1,11 @@
 {
-  "name": "scrolloop",
+  "name": "scrolloop-monorepo",
   "version": "0.5.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/976520/scrolloop.git"
   },
-  "description": "The modern scrolling component for React and React Native",
+  "description": "scrolloop monorepo — framework-agnostic virtual scrolling core + framework adapters",
   "type": "module",
   "workspaces": [
     "packages/*"

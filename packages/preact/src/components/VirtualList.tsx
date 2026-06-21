@@ -6,7 +6,7 @@ import {
   useMemo,
 } from "preact/hooks";
 import type { CSSProperties } from "preact";
-import { calculateVirtualRange } from "@scrolloop/core";
+import { calculateVirtualRange } from "scrolloop";
 import type { VirtualListProps } from "../types";
 
 export function VirtualList({

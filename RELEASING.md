@@ -27,18 +27,27 @@ On push to `master`, the `release` job runs `changesets/action`:
 ### One-time setup
 
 - Add an `NPM_TOKEN` repo secret (granular automation token with publish rights
-  to the `@scrolloop` scope), or configure npm **Trusted Publishing** (OIDC) for
-  each package — the `release` job already has `id-token: write`.
-- First publish: each `@scrolloop/*` package is published fresh at the version in
-  its `package.json` (see the initial changeset).
+  to the `scrolloop` package and the `@scrolloop` scope), or configure npm
+  **Trusted Publishing** (OIDC) per package — `release` already has `id-token: write`.
+- First release: package versions are set directly to `1.0.0` (no changeset),
+  so `changesets/action` publishes them on the first master push. `scrolloop`
+  goes `0.5.2 → 1.0.0`; the `@scrolloop/*` adapters are published fresh at
+  `1.0.0`. Changesets governs every release after that.
 
-## Deprecating the legacy `scrolloop` package
+## Breaking change in `scrolloop@1.0.0`
 
-The old single `scrolloop` package (React-only) is superseded by
-`@scrolloop/react`. After the first scoped release, run once:
+`scrolloop` is now the **framework-agnostic core** (Virtualizer, InfiniteSource,
+layout/scroll utilities) that every adapter depends on — like `eslint` is the
+core that `eslint-plugin-*` build on. Every `@scrolloop/<framework>` install
+pulls `scrolloop` transitively, so its download count and history continue on
+this package.
 
-```bash
-npm deprecate scrolloop "Renamed to @scrolloop/react — see https://github.com/976520/scrolloop"
+The previous `scrolloop@0.5.x` shipped the **React components** directly. Those
+moved to `@scrolloop/react`. Existing React users migrate:
+
+```diff
+- import { VirtualList } from "scrolloop";
++ import { VirtualList } from "@scrolloop/react";
 ```
 
 ## Local checks

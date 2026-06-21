@@ -9,5 +9,5 @@ export default defineConfig({
   minify: true,
   sourcemap: false,
   fixedExtension: true,
-  external: ["preact", "preact/hooks", "@scrolloop/core"],
+  external: ["preact", "preact/hooks", "scrolloop"],
 });

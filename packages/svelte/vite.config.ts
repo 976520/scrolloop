@@ -12,7 +12,7 @@ export default defineConfig({
       fileName: () => "index.mjs",
     },
     rollupOptions: {
-      external: [/^svelte($|\/)/, "@scrolloop/core"],
+      external: [/^svelte($|\/)/, "scrolloop"],
     },
   },
 });

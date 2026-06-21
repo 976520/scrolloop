@@ -1,4 +1,4 @@
-import type { PageResponse } from "@scrolloop/core";
+import type { PageResponse } from "scrolloop";
 
 export interface VirtualListProps {
   count: number;

@@ -1,7 +1,7 @@
 {
   "name": "@scrolloop/vue",
-  "version": "0.1.0",
-  "description": "Vue 3 adapter for @scrolloop/core",
+  "version": "1.0.0",
+  "description": "Vue 3 adapter for scrolloop",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -35,7 +35,7 @@
     "vue": ">=3.3.0"
   },
   "dependencies": {
-    "@scrolloop/core": "workspace:*"
+    "scrolloop": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

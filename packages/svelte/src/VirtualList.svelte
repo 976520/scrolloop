@@ -1,5 +1,5 @@
 <script lang="ts" generics="T">
-  import { calculateVirtualRange } from "@scrolloop/core";
+  import { calculateVirtualRange } from "scrolloop";
   import type { Snippet } from "svelte";
 
   interface Props {

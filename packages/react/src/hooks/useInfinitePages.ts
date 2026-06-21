@@ -1,9 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { InfiniteSource } from "@scrolloop/core";
-import type {
-  InfiniteSourceState,
-  InfiniteSourceOptions,
-} from "@scrolloop/core";
+import { InfiniteSource } from "scrolloop";
+import type { InfiniteSourceState, InfiniteSourceOptions } from "scrolloop";
 
 export function useInfinitePages<T>(
   options: InfiniteSourceOptions<T>
