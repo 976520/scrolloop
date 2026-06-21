@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [ master, develop ]
+    branches: [master, develop]
   push:
-    branches: [ master, develop ]
+    branches: [master, develop]
 
 permissions:
   contents: read
@@ -23,43 +23,42 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 20
-
+      # pnpm must be set up BEFORE setup-node so `cache: pnpm` can find it
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v5
+      - name: Setup Node
+        uses: actions/setup-node@v6
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: 24
+          cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: |
-          if pnpm run | grep -q "^ *lint *"; then pnpm run lint; else echo "no lint script"; fi
+      # Build once; lint/typecheck/test/size reuse the Turbo cache (no rebuild)
+      - name: Build
+        run: pnpm run build
+
+      - name: Lint (oxlint fast pass)
+        run: pnpm run lint:fast
+
+      - name: Lint (ESLint)
+        run: pnpm run lint
 
       - name: Typecheck
         run: pnpm run typecheck
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      - name: Dead code / unused deps (knip)
+        run: pnpm run knip
+
+      - name: Package correctness (publint + attw)
+        run: pnpm run lint:package
 
       - name: Test
-        run: |
-          if pnpm run | grep -q "^ *test *"; then pnpm test -- --coverage; else echo "no test script"; fi
-          pnpm --filter @scrolloop/react test:e2e
+        run: pnpm test -- --coverage
+
+      - name: Bundle size budgets (size-limit)
+        run: pnpm run size
 
       - name: Report Coverage
         if: success() && github.event_name == 'pull_request'
@@ -68,40 +67,40 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             const packagesDir = 'packages';
             if (!fs.existsSync(packagesDir)) return;
-            
+
             const dirs = fs.readdirSync(packagesDir);
-            
+
             const validPackages = dirs.filter(dir => {
               const summaryPath = path.join(packagesDir, dir, 'coverage', 'coverage-summary.json');
               return fs.existsSync(summaryPath);
             });
-            
+
             if (validPackages.length === 0) return;
-            
+
             let message = '## 📊 Test Coverage Report (vitest) \n\n';
-            
+
             message += '| Package | Statements | Branches | Functions | Lines |\n';
             message += '| :--- | :--- | :--- | :--- | :--- |\n';
-            
+
             const metrics = ['statements', 'branches', 'functions', 'lines'];
-            
+
             for (const pkg of validPackages) {
               const summaryPath = path.join(packagesDir, pkg, 'coverage', 'coverage-summary.json');
               const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
               const total = summary.total;
-              
+
               message += `| **@scrolloop/${pkg}** |`;
-              
+
               for (const metric of metrics) {
                 const data = total[metric];
                 message += ` ${data.covered}/${data.total} (${data.pct}%) |`;
               }
               message += '\n';
             }
-            
+
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -109,11 +108,45 @@ jobs:
               body: message
             });
 
-      - name: Build
-        run: pnpm run build
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install Playwright (browsers + system deps)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @scrolloop/react exec playwright install --with-deps
+
+      - name: Install Playwright system deps (cached browsers)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter @scrolloop/react exec playwright install-deps
+
+      - name: E2E
+        run: pnpm --filter @scrolloop/react test:e2e
 
   publish:
-    needs: ci
+    needs: [ci, e2e]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
     runs-on: ubuntu-latest
     permissions:
@@ -124,27 +157,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node (npm registry)
-        uses: actions/setup-node@v6
-        with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v5
+      - name: Setup Node (npm registry)
+        uses: actions/setup-node@v6
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org/
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
