@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "Headless virtual scrolling core - platform agnostic",
   "type": "module",
-  "private": true,
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
@@ -45,5 +44,9 @@
   },
   "engines": {
     "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

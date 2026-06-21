@@ -10,39 +10,7 @@
   "workspaces": [
     "packages/*"
   ],
-  "bundle": true,
   "packageManager": "pnpm@10.20.0",
-  "main": "./packages/react/dist/index.cjs",
-  "module": "./packages/react/dist/index.mjs",
-  "types": "./packages/react/dist/index.d.cts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./packages/react/dist/index.d.mts",
-        "default": "./packages/react/dist/index.mjs"
-      },
-      "require": {
-        "types": "./packages/react/dist/index.d.cts",
-        "default": "./packages/react/dist/index.cjs"
-      }
-    },
-    "./native": {
-      "import": {
-        "types": "./packages/react-native/dist/index.d.mts",
-        "default": "./packages/react-native/dist/index.mjs"
-      },
-      "require": {
-        "types": "./packages/react-native/dist/index.d.cts",
-        "default": "./packages/react-native/dist/index.cjs"
-      }
-    }
-  },
-  "sideEffects": false,
-  "files": [
-    "packages/react/dist",
-    "packages/react-native/dist",
-    "README.md"
-  ],
   "lint-staged": {
     "packages/**/*.{js,jsx,ts,tsx,vue,svelte}": [
       "eslint --fix",
@@ -87,17 +55,6 @@
   ],
   "author": "",
   "license": "MIT",
-  "peerDependencies": {
-    "react": ">=18.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react-dom": {
-      "optional": true
-    },
-    "react-native": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.3",
     "@eslint/js": "10.0.1",
@@ -141,5 +98,6 @@
   },
   "engines": {
     "node": ">=20.19.0"
-  }
+  },
+  "private": true
 }

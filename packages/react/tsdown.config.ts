@@ -9,6 +9,5 @@ export default defineConfig({
   minify: true,
   sourcemap: false,
   fixedExtension: true,
-  external: ["react", "react-dom"],
-  noExternal: ["@scrolloop/core"],
+  external: ["react", "react-dom", "@scrolloop/core"],
 });
