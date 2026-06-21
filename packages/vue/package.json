@@ -40,5 +40,8 @@
     "unplugin-vue": "7.2.0",
     "vue": "^3.3.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  }
 }

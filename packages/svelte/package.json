@@ -38,5 +38,8 @@
     "vite": "^5.0.0",
     "vite-plugin-dts": "^4.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  }
 }
