@@ -9,6 +9,9 @@ Modern virtual and infinite scrolling components for React, React Native, Preact
 ![Last commit](https://img.shields.io/github/last-commit/976520/scrolloop?color=red)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
+> [!NOTE]
+> The legacy `scrolloop` package is now `@scrolloop/react`. Install the scoped package for your framework below.
+
 ## Install
 
 ### React
