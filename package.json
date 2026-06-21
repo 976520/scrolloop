@@ -37,6 +37,9 @@
     "knip:production": "knip --production --strict",
     "size": "turbo run size",
     "lint:package": "turbo run lint:package",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "turbo run build && changeset publish",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -55,6 +58,7 @@
   "license": "MIT",
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.3",
+    "@changesets/cli": "^2.31.0",
     "@eslint/js": "10.0.1",
     "@size-limit/preset-small-lib": "12.1.0",
     "@testing-library/jest-dom": "^6.0.0",
