@@ -110,6 +110,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
         with:
@@ -136,11 +137,11 @@ jobs:
 
       - name: Install Playwright (browsers + system deps)
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @scrolloop/react exec playwright install --with-deps
+        run: pnpm --filter @scrolloop/react exec playwright install --with-deps chromium
 
       - name: Install Playwright system deps (cached browsers)
         if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter @scrolloop/react exec playwright install-deps
+        run: pnpm --filter @scrolloop/react exec playwright install-deps chromium
 
       - name: E2E
         run: pnpm --filter @scrolloop/react test:e2e
