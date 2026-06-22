@@ -7,16 +7,12 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.ts",
-      formats: ["es", "cjs"],
-      fileName: (format) => `index.${format === "es" ? "mjs" : "cjs"}`,
+      // Svelte 5 is ESM-first; CJS consumption is effectively nonexistent.
+      formats: ["es"],
+      fileName: () => "index.mjs",
     },
     rollupOptions: {
-      external: [
-        "svelte",
-        "svelte/store",
-        "@scrolloop/core",
-        "@scrolloop/shared",
-      ],
+      external: [/^svelte($|\/)/, "scrolloop"],
     },
   },
 });

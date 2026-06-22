@@ -1,6 +1,4 @@
-import type { PageResponse, Range } from "@scrolloop/shared";
-
-export type { PageResponse, Range };
+import type { PageResponse } from "scrolloop";
 
 export interface VirtualListProps {
   count: number;

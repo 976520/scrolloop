@@ -14,7 +14,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import type { VirtualListProps, ItemProps } from "../types";
-import { calculateVirtualRange, clamp } from "@scrolloop/core";
+import { calculateVirtualRange, clamp } from "scrolloop";
 
 export const VirtualList = memo<VirtualListProps>(
   ({

@@ -2,9 +2,10 @@ import { useEffect, memo, useMemo, useCallback, useRef } from "react";
 import type { InfiniteListProps } from "../types";
 import { VirtualList } from "./VirtualList";
 import { FullList } from "./FullList";
-import { useInfinitePages, findMissingPages } from "@scrolloop/shared";
+import { findMissingPages } from "scrolloop";
+import { useInfinitePages } from "../hooks/useInfinitePages";
 import { useTransition } from "../hooks/useTransition";
-import { calculateVirtualRange } from "@scrolloop/core";
+import { calculateVirtualRange } from "scrolloop";
 import type { CSSProperties } from "react";
 import { isServerSide as isServerSideEnvironment } from "../utils/isServerSide";
 

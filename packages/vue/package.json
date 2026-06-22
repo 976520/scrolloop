@@ -1,40 +1,53 @@
 {
   "name": "@scrolloop/vue",
-  "version": "0.1.0",
-  "description": "Vue 3 adapter for @scrolloop/core",
+  "version": "1.0.0",
+  "description": "Vue 3 adapter for scrolloop",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
-    }
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./style.css": "./dist/style.css"
   },
   "sideEffects": false,
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch"
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "size": "size-limit",
+    "lint:publint": "publint --strict",
+    "lint:attw": "attw --pack --profile node16 --exclude-entrypoints ./style.css",
+    "lint:package": "pnpm run lint:publint && pnpm run lint:attw"
   },
   "peerDependencies": {
     "vue": ">=3.3.0"
   },
   "dependencies": {
-    "@scrolloop/core": "workspace:*",
-    "@scrolloop/shared": "workspace:*"
+    "scrolloop": "workspace:*"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.0",
     "typescript": "^5.0.0",
-    "vite": "^5.0.0",
-    "vite-plugin-dts": "^4.0.0",
-    "vue": "^3.3.0",
-    "vue-tsc": "^2.0.0"
+    "unplugin-vue": "7.2.0",
+    "vue": "^3.3.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }

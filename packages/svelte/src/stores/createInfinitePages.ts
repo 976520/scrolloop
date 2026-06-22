@@ -1,9 +1,6 @@
 import { readable } from "svelte/store";
-import { InfiniteSource } from "@scrolloop/shared";
-import type {
-  InfiniteSourceOptions,
-  InfiniteSourceState,
-} from "@scrolloop/shared";
+import { InfiniteSource } from "scrolloop";
+import type { InfiniteSourceOptions, InfiniteSourceState } from "scrolloop";
 
 export function createInfinitePages<T>(options: InfiniteSourceOptions<T>) {
   const source = new InfiniteSource(options);

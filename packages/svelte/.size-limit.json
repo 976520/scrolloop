@@ -1,0 +1,7 @@
+[
+  {
+    "name": "svelte (ESM)",
+    "path": "dist/index.mjs",
+    "limit": "2.8 kB"
+  }
+]

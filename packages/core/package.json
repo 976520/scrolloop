@@ -1,16 +1,21 @@
 {
-  "name": "@scrolloop/core",
-  "version": "0.1.0",
+  "name": "scrolloop",
+  "version": "1.0.0",
   "description": "Headless virtual scrolling core - platform agnostic",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "sideEffects": false,
@@ -18,11 +23,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "size": "size-limit",
+    "lint:publint": "publint --strict",
+    "lint:attw": "attw --pack --profile node16",
+    "lint:package": "pnpm run lint:publint && pnpm run lint:attw"
   },
   "keywords": [
     "virtual-scroll",
@@ -33,8 +42,14 @@
   "license": "MIT",
   "devDependencies": {
     "@vitest/coverage-v8": "^2.0.0",
-    "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

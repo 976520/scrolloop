@@ -14,7 +14,7 @@ function App() {
     const response = await fetch(
       `https://api.example.com/items?page=${page}&size=${size}`
     );
-    return await response.json(); // { items: T[], total: number } 반환
+    return await response.json(); // { items: T[], total: number, hasMore: boolean } 반환
   };
 
   return (
@@ -32,13 +32,74 @@ function App() {
 }
 ```
 
+```tsx [Preact]
+import { InfiniteList } from "@scrolloop/preact";
+
+export function App() {
+  const fetchPage = async (page: number, size: number) => {
+    const response = await fetch(`/api/items?page=${page}&size=${size}`);
+    return response.json(); // { items, total, hasMore }
+  };
+
+  return (
+    <InfiniteList
+      fetchPage={fetchPage}
+      itemSize={50}
+      renderItem={(item, index, style) => (
+        <div style={style}>{item ? item.title : "Loading..."}</div>
+      )}
+    />
+  );
+}
+```
+
+```vue [Vue]
+<script setup lang="ts">
+import { InfiniteList } from "@scrolloop/vue";
+
+const fetchPage = async (page: number, size: number) => {
+  const response = await fetch(`/api/items?page=${page}&size=${size}`);
+  return response.json(); // { items, total, hasMore }
+};
+</script>
+
+<template>
+  <InfiniteList :fetch-page="fetchPage" :item-size="50" :height="400">
+    <template #default="{ item, style }">
+      <div :style="style">{{ item?.title ?? "Loading..." }}</div>
+    </template>
+  </InfiniteList>
+</template>
+```
+
+```svelte [Svelte]
+<script lang="ts">
+  import { InfiniteList } from "@scrolloop/svelte";
+
+  const fetchPage = async (page: number, size: number) => {
+    const response = await fetch(`/api/items?page=${page}&size=${size}`);
+    return response.json(); // { items, total, hasMore }
+  };
+</script>
+
+<InfiniteList {fetchPage} itemSize={50} height={400}>
+  {#snippet children(index, item, style)}
+    <div
+      style={`position: ${style.position}; top: ${style.top}; left: ${style.left}; right: ${style.right}; height: ${style.height};`}
+    >
+      {item?.title ?? "Loading..."}
+    </div>
+  {/snippet}
+</InfiniteList>
+```
+
 ```tsx [React Native]
 import { View, Text } from "react-native";
 import { InfiniteList } from "@scrolloop/react-native";
 
 function App() {
   const fetchPage = async (page: number, size: number) => {
-    return { items: data, total: 1000 };
+    return { items: data, total: 1000, hasMore: page < 49 };
   };
 
   return (
@@ -71,14 +132,24 @@ InfiniteList는 가상화 설정 외에도 데이터 페칭 및 상태 관리를
 | `itemSize`          | `number`   | **Yes**  | 각 아이템의 고정된 높이(또는 너비)입니다.                                                                 |
 | `pageSize`          | `number`   | No       | 한 페이지당 아이템의 개수입니다. (기본값: `20`)                                                           |
 | `initialPage`       | `number`   | No       | 처음 로드할 페이지 번호입니다. (기본값: `0`)                                                              |
-| `prefetchThreshold` | `number`   | No       | 다음 페이지를 미리 불러올 기준이 되는 남은 페이지 수입니다. (기본값: `1`)                                 |
+| `prefetchThreshold` | `number`   | No       | 현재 범위 뒤로 추가로 미리 불러올 페이지 수입니다. (기본값: `1`, React/React Native/Vue/Svelte)           |
 | `height`            | `number`   | No       | 리스트 컨테이너의 높이입니다. (기본값: `400`)                                                             |
-| `overscan`          | `number`   | No       | 뷰포트 외부에서 미리 렌더링할 아이템의 수입니다. (기본값: `pageSize * 2`)                                 |
+| `overscan`          | `number`   | No       | 뷰포트 외부에서 미리 렌더링할 아이템 수입니다. (기본값: `Math.max(20, pageSize * 2)`)                     |
 | `renderLoading`     | `Function` | No       | 최초 로딩 중에 표시할 UI를 렌더링하는 함수입니다.                                                         |
 | `renderError`       | `Function` | No       | 에러 발생 시 표시할 UI를 렌더링하는 함수입니다. `(error, retry) => ReactNode` 형태입니다.                 |
 | `renderEmpty`       | `Function` | No       | 데이터가 없을 때 표시할 UI를 렌더링하는 함수입니다.                                                       |
 | `onPageLoad`        | `Function` | No       | 페이지 로드가 성공했을 때 실행되는 콜백입니다.                                                            |
 | `onError`           | `Function` | No       | 에러가 발생했을 때 실행되는 콜백입니다.                                                                   |
+
+`PageResponse<T>`는 다음 형태입니다.
+
+```ts
+interface PageResponse<T> {
+  items: T[];
+  total: number;
+  hasMore: boolean;
+}
+```
 
 ### React 전용 (@scrolloop/react)
 
@@ -89,8 +160,30 @@ React 환경에서는 SSR 및 성능 최적화를 위한 추가 옵션을 제공
 - **`initialTotal`** (`number`): 전체 아이템의 총 개수를 서버에서 미리 알고 있는 경우 전달합니다.
 - **`transitionStrategy`** (`object`): SSR에서 가상화 리스트로 전환될 때의 상세 전략을 설정합니다.
 
+### Preact 전용 (@scrolloop/preact)
+
+- `class`: 컨테이너 요소에 적용할 CSS 클래스입니다.
+- `style`: 컨테이너 요소에 적용할 인라인 스타일입니다.
+- 현재 Preact adapter는 `prefetchThreshold` prop을 노출하지 않습니다. 필요한 페이지 범위와 다음 페이지를 자동으로 로드합니다.
+
+### Vue 전용 (@scrolloop/vue)
+
+- 기본 slot은 `{ item, index, style }`을 전달합니다.
+- `loading`, `error`, `empty` named slot을 사용할 수 있습니다.
+- `pageLoad`, `error` 이벤트로 로딩 결과를 받을 수 있습니다.
+
+### Svelte 전용 (@scrolloop/svelte)
+
+- `children` snippet은 `(index, item, style)`을 전달받습니다.
+- `loading`, `error`, `empty` snippet을 사용할 수 있습니다.
+
+### React Native 전용 (@scrolloop/react-native)
+
+- React Native adapter는 `onScroll`을 제외한 `ScrollViewProps`를 전달할 수 있습니다.
+- SSR 관련 props는 React DOM adapter에서만 지원합니다.
+
 ## 작동 방식
 
 1. **Lazy Loading**: `InfiniteList`는 사용자의 스크롤 위치를 감시하며, 화면에 노출될 것으로 예상되는 페이지가 아직 로드되지 않은 경우에만 `fetchPage`를 호출합니다.
 2. **Skeleton 지원**: data가 로딩 중일 때 `renderItem`에 `undefined`를 넘겨주어, skeleton UI를 쉽게 구현할 수 있도록 합니다.
-3. **자동 재시도**: 네트워크 오류 등으로 페칭에 실패한 경우, `renderError`에서 제공하는 `retry` 함수를 통해 실패한 페이지부터 다시 불러올 수 있습니다.
+3. **자동 재시도**: 네트워크 오류 등으로 페칭에 실패한 경우, `renderError` 또는 error slot/snippet에서 제공하는 `retry` 함수를 통해 `initialPage`부터 다시 불러올 수 있습니다.

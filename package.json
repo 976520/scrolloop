@@ -1,39 +1,21 @@
 {
-  "name": "scrolloop",
+  "name": "scrolloop-monorepo",
   "version": "0.5.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/976520/scrolloop.git"
   },
-  "description": "The modern scrolling component for React and React Native",
+  "description": "scrolloop monorepo — framework-agnostic virtual scrolling core + framework adapters",
   "type": "module",
   "workspaces": [
     "packages/*"
   ],
-  "bundle": true,
   "packageManager": "pnpm@10.20.0",
-  "main": "./packages/react/dist/index.cjs",
-  "module": "./packages/react/dist/index.mjs",
-  "types": "./packages/react/dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./packages/react/dist/index.d.ts",
-      "import": "./packages/react/dist/index.mjs",
-      "require": "./packages/react/dist/index.cjs"
-    },
-    "./native": {
-      "types": "./packages/react-native/dist/index.d.ts",
-      "import": "./packages/react-native/dist/index.mjs",
-      "require": "./packages/react-native/dist/index.cjs"
-    }
-  },
-  "sideEffects": false,
-  "files": [
-    "packages/react/dist",
-    "packages/react-native/dist",
-    "README.md"
-  ],
   "lint-staged": {
+    "packages/**/*.{js,jsx,ts,tsx,vue,svelte}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
     "*.{js,jsx,ts,tsx,json,css,scss,md}": [
       "prettier --write"
     ]
@@ -46,9 +28,18 @@
     "test:ssr": "pnpm --filter @scrolloop/react test:ssr",
     "test:e2e": "pnpm --filter @scrolloop/react test:e2e",
     "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint",
-    "build:legacy": "tsup",
-    "dev:legacy": "tsup --config tsup.dev.ts --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:fast": "oxlint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "knip:production": "knip --production --strict",
+    "size": "turbo run size",
+    "lint:package": "turbo run lint:package",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "turbo run build && changeset publish",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -65,18 +56,11 @@
   ],
   "author": "",
   "license": "MIT",
-  "peerDependencies": {
-    "react": ">=18.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react-dom": {
-      "optional": true
-    },
-    "react-native": {
-      "optional": true
-    }
-  },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.3",
+    "@changesets/cli": "^2.31.0",
+    "@eslint/js": "10.0.1",
+    "@size-limit/preset-small-lib": "12.1.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.0.0",
@@ -84,19 +68,38 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitest/coverage-v8": "^2.0.0",
-    "bundlesize": "^0.18.2",
+    "eslint": "10.5.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-oxlint": "1.70.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-svelte": "3.19.0",
+    "eslint-plugin-vue": "10.9.2",
+    "globals": "17.6.0",
     "husky": "^9.1.7",
     "jsdom": "^24.0.0",
+    "knip": "6.17.1",
     "lint-staged": "^16.2.6",
+    "oxlint": "1.70.0",
     "prettier": "^3.6.2",
+    "prettier-plugin-svelte": "^4.1.1",
+    "publint": "0.3.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "terser": "^5.44.0",
-    "tsup": "^8.0.0",
+    "size-limit": "12.1.0",
+    "svelte-eslint-parser": "1.8.0",
+    "tsdown": "0.22.3",
     "turbo": "^2.0.0",
     "typescript": "^5.0.0",
+    "typescript-eslint": "8.61.1",
+    "unrun": "^0.3.1",
     "vitepress": "^1.6.4",
     "vitest": "^2.0.0",
-    "vue": "^3.5.26"
-  }
+    "vue": "^3.5.26",
+    "vue-eslint-parser": "10.4.1",
+    "vue-tsc": "^2.2.12"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "private": true
 }

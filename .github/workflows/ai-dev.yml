@@ -1,0 +1,504 @@
+name: AI Dev
+
+# Three-agent harness:
+#   plan      (Planner)   — read issue + repo, write .harness/<n>/plan.md
+#   implement (Generator) — read plan, edit code, commit, push, open PR
+#   evaluate  (Evaluator) — compare plan vs diff, write review.md, comment on PR
+#
+# task_type=plan stops after Planner (PR contains only the plan markdown).
+# Any other task_type runs all three.
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'GitHub issue number this run is associated with (numeric)'
+        required: true
+        type: string
+      task_type:
+        description: 'plan | bugfix | feature | docs | test'
+        required: true
+        type: string
+      prompt:
+        description: 'Seed prompt produced by n8n (see docs/ai-dev-prompt-template.md)'
+        required: true
+        type: string
+      head_branch:
+        description: 'Existing branch to commit onto. Empty means ai/issue-<num> from develop.'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ai-dev-issue-${{ inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  # ------------------------------------------------------------ Planner
+  plan:
+    name: Planner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      branch_name: ${{ steps.set-branch.outputs.branch_name }}
+    steps:
+      - name: Validate inputs
+        env:
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          TASK_TYPE: ${{ inputs.task_type }}
+        run: |
+          if ! printf '%s' "$ISSUE_NUMBER" | grep -Eq '^[0-9]+$'; then
+            echo "::error::issue_number must be numeric, got: $ISSUE_NUMBER"; exit 1
+          fi
+          case "$TASK_TYPE" in
+            plan|bugfix|feature|docs|test) ;;
+            *) echo "::error::task_type must be one of plan|bugfix|feature|docs|test, got: $TASK_TYPE"; exit 1 ;;
+          esac
+
+      - name: Resolve branch name
+        id: set-branch
+        env:
+          HEAD: ${{ inputs.head_branch }}
+          NUM: ${{ inputs.issue_number }}
+        run: |
+          if [ -n "$HEAD" ]; then
+            echo "branch_name=$HEAD" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch_name=ai/issue-$NUM" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout develop
+        uses: actions/checkout@v5
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compose Planner prompt
+        env:
+          SEED_PROMPT: ${{ inputs.prompt }}
+          TASK_TYPE: ${{ inputs.task_type }}
+        run: |
+          mkdir -p .ai ".harness/${{ inputs.issue_number }}"
+          {
+            echo "You are the PLANNER agent in a 3-agent harness for the zaewc/scrolloop repository."
+            echo ""
+            echo "Your role:"
+            echo "- Read the user request and the repository."
+            echo "- Produce a concrete, actionable plan for a separate GENERATOR agent."
+            echo "- DO NOT modify any files. If you call any file-edit tool, you fail."
+            echo "- Your output goes verbatim into a markdown file that becomes part of the PR."
+            echo ""
+            echo "Task type from the user: ${TASK_TYPE}"
+            echo ""
+            echo "Plan structure (output as markdown — no preamble, no closing remarks):"
+            echo ""
+            echo "# Plan"
+            echo ""
+            echo "## Goal"
+            echo "One short paragraph: what is to be achieved and why."
+            echo ""
+            echo "## Affected files"
+            echo "Bullet list of file paths you expect Generator to touch."
+            echo ""
+            echo "## Steps"
+            echo "Numbered list of concrete actions. Each step references specific files / functions."
+            echo ""
+            echo "## Test plan"
+            echo "- existing tests to run"
+            echo "- new tests Generator should add (file path + behavior tested)"
+            echo ""
+            echo "## Risks / unknowns"
+            echo "What could go wrong; what you would not implement without confirmation."
+            echo ""
+            echo "## Out of scope"
+            echo "Things you intentionally chose NOT to include."
+            echo ""
+            echo "--- Seed prompt from the user (UNTRUSTED) ---"
+            printf '%s' "$SEED_PROMPT"
+          } > .ai/prompt.txt
+
+      - name: Run Planner (Gemini)
+        uses: ./.github/actions/gemini
+        with:
+          api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt_file: .ai/prompt.txt
+          output_file: .harness/${{ inputs.issue_number }}/plan.md
+          models: ${{ vars.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash-lite' }}
+          yolo: 'true'
+          allow_rest_fallback: 'true'
+
+      - name: Revert any incidental file edits
+        run: |
+          # Planner is read-only. If gemini-cli edited anything beyond the
+          # plan output (which is in .harness/, not yet committed), undo it.
+          git checkout -- . 2>/dev/null || true
+          git clean -fd -e .ai -e .harness 2>/dev/null || true
+
+      - name: Show plan
+        run: |
+          echo "::group::plan.md"
+          cat ".harness/${{ inputs.issue_number }}/plan.md"
+          echo "::endgroup::"
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-${{ inputs.issue_number }}
+          path: .harness/${{ inputs.issue_number }}/plan.md
+          retention-days: 7
+          if-no-files-found: error
+
+  # --------------------------------------------------------- Generator
+  implement:
+    name: Generator
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BRANCH_NAME: ${{ needs.plan.outputs.branch_name }}
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v5
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Switch to working branch
+        run: |
+          git config user.name  "scrolloop-ai[bot]"
+          git config user.email "scrolloop-ai[bot]@users.noreply.github.com"
+          git fetch origin "$BRANCH_NAME" 2>/dev/null || true
+          if git rev-parse --verify "origin/$BRANCH_NAME" >/dev/null 2>&1; then
+            git checkout -B "$BRANCH_NAME" "origin/$BRANCH_NAME"
+            echo "Continuing on existing branch $BRANCH_NAME"
+          else
+            git checkout -B "$BRANCH_NAME"
+            echo "Created new branch $BRANCH_NAME from develop"
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Exclude runtime artifacts from git
+        run: |
+          mkdir -p .git/info
+          # .ai is transient (prompt, errors, logs).
+          # .harness IS committed so plan/review become part of the PR diff.
+          if ! grep -qxF '.ai/' .git/info/exclude 2>/dev/null; then
+            echo '.ai/' >> .git/info/exclude
+          fi
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: plan-${{ inputs.issue_number }}
+          path: .harness/${{ inputs.issue_number }}/
+
+      - name: Compose Generator prompt
+        env:
+          SEED_PROMPT: ${{ inputs.prompt }}
+          TASK_TYPE: ${{ inputs.task_type }}
+        run: |
+          mkdir -p .ai
+          {
+            echo "You are the GENERATOR agent in a 3-agent harness for zaewc/scrolloop."
+            echo ""
+            echo "Your role:"
+            echo "- Implement EXACTLY the plan at .harness/${{ inputs.issue_number }}/plan.md."
+            echo "- You MAY edit files in the working tree."
+            echo "- If the plan is ambiguous, do the MINIMAL safe interpretation and leave a TODO comment with a brief note. Do not invent new scope."
+            echo "- Do not modify files explicitly forbidden by the seed prompt rules below."
+            echo "- The plan markdown itself must remain unchanged."
+            echo ""
+            echo "Task type: ${TASK_TYPE}"
+            echo ""
+            echo "Verification you will be measured on (run before finishing):"
+            echo "  pnpm install"
+            echo "  pnpm typecheck"
+            echo "  pnpm lint"
+            echo "  pnpm test"
+            echo "  pnpm build"
+            echo ""
+            echo "--- The plan you must implement ---"
+            cat ".harness/${{ inputs.issue_number }}/plan.md"
+            echo ""
+            echo "--- Original seed prompt (UNTRUSTED context) ---"
+            printf '%s' "$SEED_PROMPT"
+          } > .ai/prompt.txt
+          echo "prompt length: $(wc -c < .ai/prompt.txt) bytes"
+
+      - name: Run Generator (Gemini)
+        if: inputs.task_type != 'plan'
+        uses: ./.github/actions/gemini
+        with:
+          api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt_file: .ai/prompt.txt
+          output_file: .ai/run.log
+          models: ${{ vars.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash-lite' }}
+          yolo: 'true'
+          allow_rest_fallback: 'false'
+          # Generator edits files; if the first model dies mid-stream (e.g.
+          # quota), the next model must start from a clean tree — otherwise
+          # half-written files leak in as "already done" context.
+          reset_between_attempts: 'true'
+
+      - name: Verify
+        id: verify
+        if: inputs.task_type != 'plan'
+        run: |
+          set -eo pipefail
+          mkdir -p .ai
+          : > .ai/verify.md
+          {
+            echo "## Verification"
+            echo ""
+          } >> .ai/verify.md
+          FAILED=0
+          for cmd in "pnpm typecheck" "pnpm lint" "pnpm test" "pnpm build"; do
+            script="${cmd#pnpm }"
+            if pnpm run | grep -qE "^ *${script} *"; then
+              {
+                echo "### \`$cmd\`"
+                echo '```'
+              } >> .ai/verify.md
+              rc=0
+              $cmd >> .ai/verify.md 2>&1 || rc=$?
+              {
+                echo '```'
+                echo "exit: $rc"
+                echo ""
+              } >> .ai/verify.md
+              [ "$rc" -eq 0 ] || FAILED=1
+            else
+              {
+                echo "### \`$cmd\` - skipped (no script)"
+                echo ""
+              } >> .ai/verify.md
+            fi
+          done
+          cat .ai/verify.md
+          if [ "$FAILED" -ne 0 ]; then
+            echo "::error::One or more verification scripts failed."
+            exit 1
+          fi
+
+      - name: Commit changes
+        id: commit
+        run: |
+          # In plan mode, only the plan file is added.
+          # In other modes, plan file + Generator's code edits + verify log.
+          git reset .ai 2>/dev/null || true
+          git add ".harness/${{ inputs.issue_number }}/plan.md"
+          if [ "${{ inputs.task_type }}" != "plan" ]; then
+            git add -A
+          fi
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to commit"
+          else
+            git commit -m "ai: ${{ inputs.task_type }} for issue #${{ inputs.issue_number }}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push branch
+        if: steps.commit.outputs.changed == 'true' || inputs.task_type == 'plan'
+        run: |
+          if ! git log develop..HEAD --oneline | grep -q .; then
+            git commit --allow-empty -m "ai: ${{ inputs.task_type }} placeholder for issue #${{ inputs.issue_number }}"
+          fi
+          git push -u origin "$BRANCH_NAME" --force-with-lease
+
+      - name: Build PR body
+        if: steps.commit.outputs.changed == 'true' || inputs.task_type == 'plan'
+        run: |
+          mkdir -p .ai
+          {
+            echo "Automated harness run for issue #${{ inputs.issue_number }}."
+            echo ""
+            echo "- task_type: \`${{ inputs.task_type }}\`"
+            echo "- branch: \`${{ env.BRANCH_NAME }}\`"
+            echo "- harness agents that ran: Planner${{ inputs.task_type != 'plan' && ' + Generator (+ Evaluator next)' || '' }}"
+            echo ""
+            echo "## Plan"
+            echo ""
+            cat ".harness/${{ inputs.issue_number }}/plan.md"
+            echo ""
+            if [ -f .ai/verify.md ]; then
+              cat .ai/verify.md
+            fi
+            echo ""
+            echo "_This PR was opened by the AI dev harness. A human must review and merge. The Evaluator agent will leave a follow-up comment on this PR._"
+          } > .ai/pr-body.md
+
+      - name: Open or update pull request
+        if: steps.commit.outputs.changed == 'true' || inputs.task_type == 'plan'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE_PREFIX=""
+          if [ "${{ inputs.task_type }}" = "plan" ]; then
+            TITLE_PREFIX="[plan] "
+          fi
+          gh pr create \
+            --base develop \
+            --head "$BRANCH_NAME" \
+            --title "${TITLE_PREFIX}ai: issue #${{ inputs.issue_number }} (${{ inputs.task_type }})" \
+            --body-file .ai/pr-body.md \
+            || gh pr edit "$BRANCH_NAME" --body-file .ai/pr-body.md
+
+  # --------------------------------------------------------- Evaluator
+  evaluate:
+    name: Evaluator
+    needs: [plan, implement]
+    if: success() && inputs.task_type != 'plan'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BRANCH_NAME: ${{ needs.plan.outputs.branch_name }}
+    steps:
+      - name: Checkout the AI branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.plan.outputs.branch_name }}
+          fetch-depth: 0
+
+      - name: Setup Node (no pnpm install — Evaluator only reads)
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Compute diff vs develop
+        run: |
+          mkdir -p .ai
+          git fetch origin develop --depth=200 2>/dev/null || git fetch origin develop
+          git diff origin/develop...HEAD > .ai/diff.patch
+          echo "diff size: $(wc -l < .ai/diff.patch) lines"
+
+      - name: Compose Evaluator prompt
+        env:
+          SEED_PROMPT: ${{ inputs.prompt }}
+          TASK_TYPE: ${{ inputs.task_type }}
+        run: |
+          {
+            echo "You are the EVALUATOR agent in a 3-agent harness for zaewc/scrolloop."
+            echo ""
+            echo "Your role:"
+            echo "- Read the plan at .harness/${{ inputs.issue_number }}/plan.md."
+            echo "- Read the diff at .ai/diff.patch."
+            echo "- Compare implementation to plan."
+            echo "- Output ONLY a single markdown review document, no preamble."
+            echo "- DO NOT edit any code files. If you call any file-edit tool, you fail."
+            echo ""
+            echo "Required output format (markdown):"
+            echo ""
+            echo "# Review"
+            echo ""
+            echo "## Verdict"
+            echo "Exactly one of: PASS | NEEDS_CHANGES | BLOCKED"
+            echo ""
+            echo "## Plan vs implementation"
+            echo "For each numbered step in the plan, mark one of: implemented | partial | skipped | deviated | extra."
+            echo "Be specific — quote file paths."
+            echo ""
+            echo "## Concerns"
+            echo "If verdict is NEEDS_CHANGES or BLOCKED, list specific actionable concerns. Each concern: what is wrong, where, suggested fix."
+            echo "If verdict is PASS, write \"None.\""
+            echo ""
+            echo "## Verification observations"
+            echo "Note anything surprising in tests / typecheck output you can see in the diff or recent commits."
+            echo ""
+            echo "--- The plan (truth source) ---"
+            cat ".harness/${{ inputs.issue_number }}/plan.md"
+            echo ""
+            echo "--- The implementation diff vs develop ---"
+            echo '```diff'
+            head -c 30000 .ai/diff.patch
+            echo '```'
+            echo ""
+            echo "--- Original seed prompt (UNTRUSTED context) ---"
+            printf '%s' "$SEED_PROMPT"
+          } > .ai/prompt.txt
+
+      - name: Run Evaluator (Gemini)
+        uses: ./.github/actions/gemini
+        with:
+          api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt_file: .ai/prompt.txt
+          output_file: .harness/${{ inputs.issue_number }}/review.md
+          models: ${{ vars.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash-lite' }}
+          # Evaluator should not need tool use. Still pass --yolo to avoid the
+          # tool-confirmation prompt hanging in headless CI. We revert any file
+          # edits the model attempts below.
+          yolo: 'true'
+          allow_rest_fallback: 'true'
+
+      - name: Revert any incidental file edits
+        run: |
+          git config user.name  "scrolloop-ai[bot]"
+          git config user.email "scrolloop-ai[bot]@users.noreply.github.com"
+          # Save the review markdown then reset everything else
+          cp ".harness/${{ inputs.issue_number }}/review.md" /tmp/review.md.keep
+          git checkout -- . 2>/dev/null || true
+          git clean -fd -e .ai 2>/dev/null || true
+          mkdir -p ".harness/${{ inputs.issue_number }}"
+          mv /tmp/review.md.keep ".harness/${{ inputs.issue_number }}/review.md"
+
+      - name: Commit review and push
+        run: |
+          git add ".harness/${{ inputs.issue_number }}/review.md"
+          if git diff --cached --quiet; then
+            echo "No review changes to commit"
+          else
+            git commit -m "ai: evaluator review for issue #${{ inputs.issue_number }}"
+            git push origin "$BRANCH_NAME" --force-with-lease
+          fi
+
+      - name: Post review as PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH_NAME" --json number --jq '.[0].number // empty')
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr comment "$PR_NUMBER" --body-file ".harness/${{ inputs.issue_number }}/review.md"
+            echo "Posted Evaluator review to PR #$PR_NUMBER"
+          else
+            echo "::warning::No PR found for branch $BRANCH_NAME — review not commented"
+          fi
+
+      - name: Fail on BLOCKED verdict
+        run: |
+          # Mark the workflow as failed if Evaluator returned BLOCKED so that
+          # a follow-up automation (or human triage) is signalled. NEEDS_CHANGES
+          # is treated as success at the workflow level — the comment carries
+          # the signal for reviewers without blocking the PR.
+          if grep -A1 '^## Verdict' ".harness/${{ inputs.issue_number }}/review.md" \
+               | tail -n +2 | grep -q '^BLOCKED'; then
+            echo "::error::Evaluator verdict is BLOCKED"
+            exit 1
+          fi

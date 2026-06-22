@@ -131,6 +131,84 @@ describe("Virtualizer", () => {
     });
   });
 
+  describe("clamped layout (huge lists)", () => {
+    // @vitest-environment jsdom
+    it("translates item start to render coords when virtualSize exceeds totalSize", () => {
+      const ITEM_SIZE = 50;
+      const COUNT = 1_000_000;
+      const VIEWPORT = 800;
+      const stubStrategy: import("../../strategies/layout/LayoutStrategy").LayoutStrategy =
+        {
+          getItemOffset: (i: number) => i * ITEM_SIZE,
+          getItemSize: () => ITEM_SIZE,
+          getTotalSize: () => 10_000_000,
+          getVirtualSize: () => COUNT * ITEM_SIZE,
+          getVisibleRange: (scrollOffset, viewportSize, count) => {
+            const clampedTotal = 10_000_000;
+            const virtualTotal = count * ITEM_SIZE;
+            const scrollable = clampedTotal - viewportSize;
+            const virtualOffset =
+              scrollable > 0
+                ? (scrollOffset / scrollable) * (virtualTotal - viewportSize)
+                : 0;
+            const startIndex = Math.max(
+              0,
+              Math.min(count - 1, Math.floor(virtualOffset / ITEM_SIZE))
+            );
+            const endIndex = Math.min(
+              count - 1,
+              startIndex + Math.ceil(viewportSize / ITEM_SIZE)
+            );
+            return { startIndex, endIndex };
+          },
+        };
+
+      const src = new VirtualScrollSource();
+      src.setViewportSize(VIEWPORT);
+      src.setScrollOffset(5_000_000);
+
+      const v = new Virtualizer(stubStrategy, src, {
+        count: COUNT,
+        overscan: 0,
+      });
+      const state = v.getState();
+      const firstItem = state.virtualItems[0]!;
+
+      expect(firstItem.start).toBeGreaterThanOrEqual(5_000_000 - ITEM_SIZE);
+      expect(firstItem.start).toBeLessThan(5_000_000 + VIEWPORT);
+    });
+
+    it("passes through item start unchanged when not clamped", () => {
+      const state = virtualizer.getState();
+      const first = state.virtualItems[0]!;
+      expect(first.start).toBe(first.index * 50);
+    });
+
+    it("does not reuse cached items when the strategy is clamped", () => {
+      let calls = 0;
+      const stubStrategy: import("../../strategies/layout/LayoutStrategy").LayoutStrategy =
+        {
+          getItemOffset: (i: number) => {
+            calls++;
+            return i * 50;
+          },
+          getItemSize: () => 50,
+          getTotalSize: () => 1000,
+          getVirtualSize: () => 100_000,
+          getVisibleRange: () => ({ startIndex: 0, endIndex: 2 }),
+        };
+      const src = new VirtualScrollSource();
+      src.setViewportSize(200);
+      const v = new Virtualizer(stubStrategy, src, {
+        count: 1000,
+        overscan: 0,
+      });
+      const before = calls;
+      v.update();
+      expect(calls).toBeGreaterThan(before);
+    });
+  });
+
   it("should unsubscribe from scroll source on destroy", () => {
     const originalSubscribe = scrollSource.subscribe.bind(scrollSource);
     const unsubscribeSpy = vi.fn();

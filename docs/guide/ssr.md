@@ -1,6 +1,6 @@
 # SSR (Server-Side Rendering) 가이드
 
-scrolloop은 Next.js와 같은 서버 사이드 렌더링 환경에서 초기 로딩 성능과 SEO를 최적화할 수 있는 강력한 SSR 기능을 제공합니다.
+`@scrolloop/react`의 `InfiniteList`는 Next.js와 같은 서버 사이드 렌더링 환경에서 초기 로딩 성능과 SEO를 개선할 수 있는 SSR 전환 기능을 제공합니다. 이 기능은 React DOM adapter 전용입니다.
 
 ## SSR의 도전 과제
 
@@ -17,11 +17,11 @@ scrolloop은 `isServerSide` 옵션과 초기 데이터를 통해 이 문제를 �
 
 ### 1. `isServerSide` 옵션
 
-이 옵션을 활성화하면 scrolloop은 클라이언트에서 가상화 엔진이 완전히 준비되기 전까지 **정적인 풀 리스트(Full List)** 모드로 동작합니다.
+이 옵션을 활성화하면 scrolloop은 서버와 초기 클라이언트 렌더에서 **정적인 풀 리스트(Full List)** 모드로 동작합니다. 이후 설정한 전환 시점에 가상 리스트로 바뀝니다.
 
 ### 2. 하이드레이션 전략
 
-서버에서 렌더링된 HTML이 브라우저에 전달되면, scrolloop은 즉시 가상 리스트로 전환되지 않고 **사용자의 첫 상호작용(스크롤 등)**이 발생할 때까지 기다립니다. 이를 통해 하이드레이션 시 발생할 수 있는 시각적 튐(Jitter) 현상을 방지합니다.
+서버에서 렌더링된 HTML이 브라우저에 전달되면, 기본 전략은 **사용자의 첫 상호작용(스크롤 등)**이 발생할 때까지 기다린 뒤 가상 리스트로 전환합니다. 이를 통해 하이드레이션 시 발생할 수 있는 시각적 튐(Jitter) 현상을 줄입니다.
 
 ## 사용 예시 (Next.js App Router)
 
@@ -85,7 +85,24 @@ export function ClientItems({ initialData, initialTotal }) {
 | `initialTotal`       | `number`  | 전체 아이템의 총 개수(예상치)입니다. 스크롤바의 크기를 결정하는 데 사용됩니다. |
 | `transitionStrategy` | `object`  | 가상화 모드로 전환되는 타이밍과 방식을 세밀하게 제어합니다.                    |
 
+`transitionStrategy`는 다음 필드를 지원합니다.
+
+```ts
+interface TransitionStrategy {
+  switchTrigger?: "immediate" | "first-interaction" | "idle";
+  transitionStrategy?: "abort" | "replace-offscreen";
+  pruneStrategy?: "idle" | "chunk";
+  chunkSize?: number;
+}
+```
+
+- `switchTrigger`: 가상화 전환을 시작하는 시점입니다. 기본값은 첫 상호작용 전략입니다.
+- `transitionStrategy`: 전환 중 기존 DOM을 처리하는 방식입니다.
+- `pruneStrategy`: 풀 리스트 DOM을 정리하는 방식입니다.
+- `chunkSize`: chunk 정리 전략에서 한 번에 처리할 항목 수입니다.
+
 ## 주의사항
 
 - **Key 일치**: 서버에서 생성된 `key`와 클라이언트에서 생성된 `key`가 일치해야 하이드레이션 오류가 발생하지 않습니다. scrolloop 내부적으로 인덱스를 사용하지만, `renderItem` 내부의 컨텐츠에서도 일관된 키를 사용하세요.
 - **초기 로딩량**: `initialData`를 너무 크게 잡으면 SSR의 장점인 '빠른 초기 렌더링'이 무색해질 수 있습니다. 보통 첫 화면을 채울 정도(10~20개)가 적당합니다.
+- **응답 형태**: 클라이언트의 `fetchPage`는 `{ items, total, hasMore }` 형태를 반환해야 합니다.

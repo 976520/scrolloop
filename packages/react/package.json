@@ -1,16 +1,21 @@
 {
   "name": "@scrolloop/react",
-  "version": "0.2.0",
-  "description": "React adapter for @scrolloop/core",
+  "version": "1.0.0",
+  "description": "React adapter for scrolloop",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "sideEffects": false,
@@ -18,21 +23,24 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ssr": "vitest run src/__tests__/ssr/ssr.test.ts",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "size": "size-limit",
+    "lint:publint": "publint --strict",
+    "lint:attw": "attw --pack --profile node16",
+    "lint:package": "pnpm run lint:publint && pnpm run lint:attw"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "@scrolloop/core": "workspace:*",
-    "@scrolloop/shared": "workspace:*"
+    "scrolloop": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
@@ -48,10 +56,16 @@
     "jsdom": "^24.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tsup": "^8.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.0.0",
     "vitest": "^2.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }

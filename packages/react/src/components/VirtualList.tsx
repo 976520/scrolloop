@@ -11,7 +11,7 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 import type { VirtualListProps, ItemProps } from "../types";
-import { calculateVirtualRange } from "@scrolloop/core";
+import { calculateVirtualRange } from "scrolloop";
 
 export const VirtualList = memo<VirtualListProps>(
   ({

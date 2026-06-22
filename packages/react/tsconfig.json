@@ -5,6 +5,6 @@
     "outDir": "./dist",
     "types": ["vitest/globals"]
   },
-  "include": ["src/**/*", "tsup.config.ts", "vitest.setup.ts"],
+  "include": ["src/**/*", "tsdown.config.ts", "vitest.setup.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["docs/.vitepress/config.ts", "docs/.vitepress/theme/index.ts"]
+    },
+    "packages/react": {
+      "entry": ["src/__tests__/ssr/server.ts", "src/__tests__/ssr/client.tsx"]
+    }
+  },
+  "ignoreBinaries": ["playwright"],
+  "ignoreDependencies": [
+    "@tsdown/css",
+    "vue-tsc",
+    "tsx",
+    "svelte-eslint-parser",
+    "@testing-library/react",
+    "@testing-library/user-event",
+    "@types/react",
+    "@types/react-dom",
+    "@types/react-native",
+    "react",
+    "react-dom"
+  ]
+}

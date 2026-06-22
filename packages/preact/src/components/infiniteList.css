@@ -1,0 +1,28 @@
+.scrolloop-state-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scrolloop-error-content {
+  text-align: center;
+}
+
+.scrolloop-error-message {
+  margin: 0 0 4px;
+}
+
+.scrolloop-error-detail {
+  margin: 0 0 8px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.scrolloop-retry-button {
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.scrolloop-state-text {
+  margin: 0;
+}

@@ -1,0 +1,55 @@
+{
+  "name": "@scrolloop/preact",
+  "version": "1.0.0",
+  "description": "Preact adapter for scrolloop",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "size": "size-limit",
+    "lint:publint": "publint --strict",
+    "lint:attw": "attw --pack --profile node16 --exclude-entrypoints ./style.css",
+    "lint:package": "pnpm run lint:publint && pnpm run lint:attw"
+  },
+  "peerDependencies": {
+    "preact": ">=10.0.0"
+  },
+  "dependencies": {
+    "scrolloop": "workspace:*"
+  },
+  "devDependencies": {
+    "@tsdown/css": "^0.22.3",
+    "preact": "^10.0.0",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

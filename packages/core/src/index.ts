@@ -15,7 +15,20 @@ export type {
   VirtualizerOptions,
   ScrollToOptions,
   VirtualRange,
+  PageResponse,
 } from "./types";
 
 export { clamp } from "./utils/clamp";
 export { calculateVirtualRange } from "./utils/calculateVirtualRange";
+export {
+  getMaxElementSize,
+  resetMaxElementSizeCache,
+} from "./utils/getMaxElementSize";
+
+export { InfiniteSource } from "./InfiniteSource";
+export type {
+  InfiniteSourceState,
+  InfiniteSourceOptions,
+} from "./InfiniteSource";
+export { canLoadPage } from "./utils/canLoadPage";
+export { findMissingPages } from "./utils/findMissingPages";
