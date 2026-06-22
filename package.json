@@ -3,7 +3,7 @@
   "version": "0.5.2",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/976520/scrolloop.git"
+    "url": "git+https://github.com/zaewc/scrolloop.git"
   },
   "description": "scrolloop monorepo — framework-agnostic virtual scrolling core + framework adapters",
   "type": "module",

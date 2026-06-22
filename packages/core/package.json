@@ -2,6 +2,11 @@
   "name": "scrolloop",
   "version": "1.0.0",
   "description": "Headless virtual scrolling core - platform agnostic",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zaewc/scrolloop.git",
+    "directory": "packages/core"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",

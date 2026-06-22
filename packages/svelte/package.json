@@ -2,6 +2,11 @@
   "name": "@scrolloop/svelte",
   "version": "1.0.0",
   "description": "Svelte 5 adapter for scrolloop",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zaewc/scrolloop.git",
+    "directory": "packages/svelte"
+  },
   "type": "module",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

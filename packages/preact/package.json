@@ -2,6 +2,11 @@
   "name": "@scrolloop/preact",
   "version": "1.0.0",
   "description": "Preact adapter for scrolloop",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zaewc/scrolloop.git",
+    "directory": "packages/preact"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
