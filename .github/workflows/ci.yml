@@ -111,6 +111,8 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
       - uses: actions/checkout@v5
         with:
@@ -127,21 +129,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
-
-      - name: Cache Playwright browsers
-        id: pw-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-
-      - name: Install Playwright (browsers + system deps)
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @scrolloop/react exec playwright install --with-deps chromium
-
-      - name: Install Playwright system deps (cached browsers)
-        if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter @scrolloop/react exec playwright install-deps chromium
 
       - name: E2E
         run: pnpm --filter @scrolloop/react test:e2e
