@@ -17,3 +17,9 @@ cache/
 # n8n deployment secrets (see infra/n8n/.env.example)
 infra/n8n/.env
 infra/n8n/Caddyfile
+
+# Hermes agent orchestrator — isolated mini-project, deps installed in CI only.
+# The lockfile is generated per run and must never land in an AI PR diff.
+.github/hermes/pnpm-lock.yaml
+# Transient per-run agent scratch (seed prompt, diff, logs).
+.ai/
