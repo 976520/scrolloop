@@ -73,8 +73,10 @@ Inside n8n, build the workflows defined in
 3. **CI failure** — `Webhook` → `IF` (`conclusion == failure`) → `HTTP Request` (fetch logs) → `HTTP Request` to Gemini API (summarize) → `HTTP Request` (comment on PR). Never dispatches `ai-dev.yml`.
 
 Export each workflow as JSON and commit to `infra/n8n/workflows/` so deployments
-are reproducible. (That folder is intentionally not in this initial scaffold —
-add it after you build the first workflow.)
+are reproducible. The **Issue** workflow is already there
+([`workflows/issue-dispatch.json`](./workflows/README.md)) and routes to the Hermes
+(Claude) track when an issue has `ai:hermes`, else the Gemini track. Add the
+PR-comment and CI-failure workflows the same way.
 
 ## Enabling public webhooks (when a domain is ready)
 
