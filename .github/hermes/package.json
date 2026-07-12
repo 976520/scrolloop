@@ -1,0 +1,13 @@
+{
+  "name": "@scrolloop-internal/hermes",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Hermes — autonomous Claude Agent SDK coding orchestrator for the scrolloop AI pipeline. Isolated from the root pnpm workspace on purpose (see docs/hermes-pipeline.md).",
+  "scripts": {
+    "check": "node --check engineer.mjs && node --check reviewer.mjs && node --check guard.mjs && node --check prompt.mjs && node guard.mjs --self-test"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.207"
+  }
+}
