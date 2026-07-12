@@ -37,4 +37,4 @@ Formatting & fast-lint run automatically on every file you edit (PostToolUse hoo
 
 - Harness internals & maintenance: `.claude/README.md`
 - Core engine details: `packages/core/CLAUDE.md`
-- AI pipeline & labels: `docs/ai-pipeline.md`
+- AI pipeline & labels: `docs/ai-pipeline.md` (Gemini track); autonomous Claude Agent SDK track: `docs/hermes-pipeline.md`
