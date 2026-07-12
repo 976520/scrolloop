@@ -2,6 +2,8 @@
 
 This document describes the AI-assisted development pipeline for `scrolloop`. The pipeline uses **n8n** as the orchestrator and **GitHub Actions** as the isolated code-execution environment.
 
+> **Two execution tracks.** This document describes the **Gemini** track (`ai-dev.yml`, a 1-shot 3-agent harness). A second **Claude Agent SDK** track — **Hermes** — runs an autonomous agent that plans, implements, self-verifies, and iterates. n8n routes an issue to Hermes when it carries the `ai:hermes` label; otherwise it uses the Gemini track. Both share the orchestration, labels, branch convention, and security rules below. See [`hermes-pipeline.md`](./hermes-pipeline.md).
+
 ## Architecture Principle
 
 > **n8n must NOT directly modify source code.**
@@ -33,15 +35,16 @@ The pipeline is driven entirely by labels. Add these to the repository before en
 
 ### Workflow labels
 
-| Label          | Meaning                                                             |
-| -------------- | ------------------------------------------------------------------- |
-| `ai:ready`     | Issue is approved for AI implementation                             |
-| `ai:plan`      | AI should only generate an implementation plan, not modify code     |
-| `ai:fix`       | AI is allowed to modify code                                        |
-| `ai:docs`      | Documentation-only task                                             |
-| `ai:test`      | Test-only task                                                      |
-| `ai:blocked`   | Human review required before any AI action                          |
-| `ai:dangerous` | AI automation must not run on this issue/PR under any circumstances |
+| Label          | Meaning                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------- |
+| `ai:ready`     | Issue is approved for AI implementation                                                              |
+| `ai:hermes`    | Route to the Claude Agent SDK track (`hermes.yml`); without it, the Gemini track (`ai-dev.yml`) runs |
+| `ai:plan`      | AI should only generate an implementation plan, not modify code                                      |
+| `ai:fix`       | AI is allowed to modify code                                                                         |
+| `ai:docs`      | Documentation-only task                                                                              |
+| `ai:test`      | Test-only task                                                                                       |
+| `ai:blocked`   | Human review required before any AI action                                                           |
+| `ai:dangerous` | AI automation must not run on this issue/PR under any circumstances                                  |
 
 ### Area labels
 
@@ -183,9 +186,11 @@ To enable the pipeline, a maintainer must:
 2. Add the following GitHub Actions secrets:
    - `GEMINI_API_KEY` — used by Gemini CLI inside `ai-dev.yml`. Get one from Google AI Studio (https://aistudio.google.com/apikey); free tier covers `gemini-2.5-flash`.
    - (optional repo variable) `GEMINI_MODELS` — comma-separated fallback chain, e.g. `gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash-lite`. The workflow tries each in order on HTTP 429 (free-tier daily quota), then falls back to a direct Gemini REST API call for `plan` task types. Defaults to the chain above.
+   - `ANTHROPIC_API_KEY` — used by the Claude Agent SDK inside `hermes.yml` (the Hermes track). Get one from the [Console](https://platform.claude.com/). Only needed if you enable the Hermes track.
 3. Configure n8n with:
    - a GitHub App or PAT with `contents:write`, `pull_requests:write`, `issues:write`, `actions:write` (for `workflow_dispatch`),
-   - webhook endpoints for `issues`, `issue_comment`, and `workflow_run`.
+   - webhook endpoints for `issues`, `issue_comment`, and `workflow_run`,
+   - a branch that dispatches `hermes.yml` (instead of `ai-dev.yml`) when the issue has the `ai:hermes` label — see [`hermes-pipeline.md`](./hermes-pipeline.md).
 4. Confirm `develop` exists and is the default integration branch.
 
-See also: [`ai-dev-prompt-template.md`](./ai-dev-prompt-template.md).
+See also: [`ai-dev-prompt-template.md`](./ai-dev-prompt-template.md) and [`hermes-pipeline.md`](./hermes-pipeline.md).
